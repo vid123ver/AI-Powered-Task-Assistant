@@ -1,0 +1,261 @@
+.status-message {
+  text-align: center;
+  padding: 30px 0;
+  color: #555;
+  font-size: 16px;
+}
+
+.status-message.error {
+  color: #c0392b;
+}
+
+.status-message.error button {
+  margin-top: 10px;
+  background: #c0392b;
+}
+
+.status-message.error button:hover {
+  background: #922b21;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f3f4f6;
+}
+
+.container {
+  width: 90%;
+  max-width: 900px;
+  margin: 40px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 5px;
+  color: white;
+}
+
+form button {
+  background: #007bff;
+}
+
+form button:hover {
+  background: #0056b3;
+}
+
+.task-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.task-table th {
+  background: #007bff;
+  color: white;
+  padding: 12px;
+}
+
+.task-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  text-align: center;
+}
+
+.task-table tr:hover {
+  background: #f8f8f8;
+}
+
+.completed-badge {
+  background: #28a745;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.pending-badge {
+  background: #dc3545;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.edit-btn {
+  background: orange;
+  margin-right: 8px;
+}
+
+.delete-btn {
+  background: crimson;
+}
+
+.edit-btn:hover {
+  background: darkorange;
+}
+
+.delete-btn:hover {
+  background: darkred;
+}
+
+.empty {
+  text-align: center;
+  color: gray;
+  font-size: 18px;
+}
+
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  form {
+    flex-direction: column;
+  }
+
+  form button {
+    width: 100%;
+  }
+
+  .task-table thead {
+    display: none;
+  }
+
+  .task-table,
+  .task-table tbody,
+  .task-table tr,
+  .task-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .task-table tr {
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+  }
+
+  .task-table td {
+    text-align: left;
+    border-bottom: none;
+    padding: 6px 4px;
+  }
+
+  .task-table td:before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: inline-block;
+    width: 90px;
+    color: #555;
+  }
+
+  .edit-btn,
+  .delete-btn {
+    margin-top: 6px;
+    margin-right: 6px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    width: 92%;
+    padding: 20px;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 350px;
+  width: 90%;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.modal-box p {
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  background: #6c757d;
+}
+
+.cancel-btn:hover {
+  background: #565e64;
+}
+
+.confirm-btn {
+  background: crimson;
+}
+
+.confirm-btn:hover {
+  background: darkred;
+}
+
+.edit-form input {
+  padding: 6px 8px;
+  font-size: 14px;
+  width: 100%;
+}
