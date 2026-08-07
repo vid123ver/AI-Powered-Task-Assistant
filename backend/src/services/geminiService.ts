@@ -1,6 +1,7 @@
 import geminiClient from "../config/gemini";
 import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
+import { systemInstruction } from "../ai/systemInstruction";
 
 class GeminiService {
   async sendMessage(message: string): Promise<string> {
@@ -8,6 +9,7 @@ class GeminiService {
       const chat = geminiClient.chats.create({
         model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
         config: {
+          systemInstruction,
           tools: [
             {
               functionDeclarations: taskTools,
