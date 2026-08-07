@@ -86,6 +86,26 @@ class GeminiService {
               ],
             });
           }
+          else if (call.name === "delete_task") {
+  const args = call.args as {
+    id: string;
+  };
+
+  const deleted = await taskService.remove(args.id);
+
+  response = await chat.sendMessage({
+    message: [
+      {
+        functionResponse: {
+          name: call.name,
+          response: {
+            success: deleted,
+          },
+        },
+      },
+    ],
+  });
+}
         }
       }
 

@@ -53,5 +53,19 @@ export const taskTools: FunctionDeclaration[] = [
     required: ["id"],
   },
 },
-
+{
+  name: "delete_task",
+  description:
+    "Use this tool when the user wants to delete, remove, erase, discard, or permanently delete an existing task.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      id: {
+        type: Type.STRING,
+        description: "The ID of the task to delete.",
+      },
+    },
+    required: ["id"],
+  },
+},
 ];
