@@ -74,6 +74,24 @@ class GeminiService {
               ],
             });
           }
+          if (call.name === "create_task") {
+  const args = call.args as { title: string };
+
+  const newTask = await taskService.create(args.title);
+
+  response = await chat.sendMessage({
+    message: [
+      {
+        functionResponse: {
+          name: call.name,
+          response: {
+            task: newTask,
+          },
+        },
+      },
+    ],
+  });
+}
         }
       }
 
