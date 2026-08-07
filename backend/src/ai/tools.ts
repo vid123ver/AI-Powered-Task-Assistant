@@ -30,5 +30,28 @@ export const taskTools: FunctionDeclaration[] = [
       required: ["title"],
     },
   },
+  {
+  name: "update_task",
+  description:
+    "Use this tool when the user wants to update, edit, modify, rename, change the title, mark complete, mark incomplete, or change the status of an existing task.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      id: {
+        type: Type.STRING,
+        description: "The ID of the task to update.",
+      },
+      title: {
+        type: Type.STRING,
+        description: "The new title of the task.",
+      },
+      completed: {
+        type: Type.BOOLEAN,
+        description: "Whether the task is completed.",
+      },
+    },
+    required: ["id"],
+  },
+},
 
 ];

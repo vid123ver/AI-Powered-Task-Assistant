@@ -1,39 +1,3 @@
-// import geminiClient from "../config/gemini";
-// import { taskTools } from "../ai/tools";
-// import * as taskService from "./taskService";
-// class GeminiService {
-//   async sendMessage(message: string): Promise<string> {
-//     try {
-//       const response = await geminiClient.models.generateContent({
-//   model: "gemini-flash-latest",
-//   contents: message,
-//   config: {
-//     tools: [
-//       {
-//         functionDeclarations: taskTools,
-//       },
-//     ],
-//   },
-// });
-// const functionCall =
-//   response.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-
-// console.log("Function Call:", functionCall);
-// if (functionCall?.name === "list_tasks") {
-//   const tasks = await taskService.findAll();
-
-//   console.log("Tasks:", tasks);
-// }
-//     console.log(JSON.stringify(response, null, 2));
-//       return response.text ?? "No response received from Gemini.";
-//     } catch (error) {
-//       console.error("Gemini API Error:", error);
-//       throw new Error("Failed to communicate with Gemini.");
-//     }
-//   }
-// }
-
-// export default new GeminiService();
 import geminiClient from "../config/gemini";
 import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
@@ -42,7 +6,7 @@ class GeminiService {
   async sendMessage(message: string): Promise<string> {
     try {
       const chat = geminiClient.chats.create({
-        model: "gemini-flash-latest",
+        model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
         config: {
           tools: [
             {
@@ -58,6 +22,7 @@ class GeminiService {
 
       if (response.functionCalls && response.functionCalls.length > 0) {
         for (const call of response.functionCalls) {
+
           if (call.name === "list_tasks") {
             const tasks = await taskService.findAll();
 
@@ -74,31 +39,66 @@ class GeminiService {
               ],
             });
           }
-          if (call.name === "create_task") {
-  const args = call.args as { title: string };
 
-  const newTask = await taskService.create(args.title);
+          else if (call.name === "create_task") {
+            const args = call.args as {
+              title: string;
+            };
 
-  response = await chat.sendMessage({
-    message: [
-      {
-        functionResponse: {
-          name: call.name,
-          response: {
-            task: newTask,
-          },
-        },
-      },
-    ],
-  });
-}
+            const newTask = await taskService.create(args.title);
+
+            response = await chat.sendMessage({
+              message: [
+                {
+                  functionResponse: {
+                    name: call.name,
+                    response: {
+                      task: newTask,
+                    },
+                  },
+                },
+              ],
+            });
+          }
+
+          else if (call.name === "update_task") {
+            const args = call.args as {
+              id: string;
+              title?: string;
+              completed?: boolean;
+            };
+
+            const updatedTask = await taskService.update(args.id, {
+              title: args.title,
+              completed: args.completed,
+            });
+
+            response = await chat.sendMessage({
+              message: [
+                {
+                  functionResponse: {
+                    name: call.name,
+                    response: {
+                      task: updatedTask,
+                    },
+                  },
+                },
+              ],
+            });
+          }
         }
       }
 
       return response.text ?? "No response from Gemini.";
     } catch (error) {
       console.error("Gemini API Error:", error);
-      throw new Error("Failed to communicate with Gemini.");
+      if ((error as any).status === 429) {
+  throw new Error(
+    "Gemini API quota exceeded. Please wait a while or use another API key."
+  );
+}
+
+throw error;
     }
   }
 }
