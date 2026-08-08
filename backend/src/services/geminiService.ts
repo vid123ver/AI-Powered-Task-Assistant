@@ -23,46 +23,49 @@ class GeminiService {
         message,
       });
 
-      if (response.functionCalls?.length) {
-        const functionCalls = response.functionCalls;
+      let loopCount = 0;
+      const maxLoops = 10;
 
-        for (const call of functionCalls) {
+      while (response.functionCalls?.length && loopCount < maxLoops) {
+        loopCount++;
+
+        const functionResponses = [];
+
+        for (const call of response.functionCalls) {
           try {
             if (call.name === "list_tasks") {
               const tasks = await taskService.findAll();
 
-              response = await chat.sendMessage({
-                message: [
-                  {
-                    functionResponse: {
-                      name: call.name,
-                      response: {
-                        tasks,
-                      },
-                    },
+              functionResponses.push({
+                functionResponse: {
+                  name: call.name,
+                  id: call.id,
+                  response: {
+                    tasks,
                   },
-                ],
+                },
               });
-            } else if (call.name === "create_task") {
+            }
+
+            else if (call.name === "create_task") {
               const args = call.args as {
                 title: string;
               };
 
               const newTask = await taskService.create(args.title);
 
-              response = await chat.sendMessage({
-                message: [
-                  {
-                    functionResponse: {
-                      name: call.name,
-                      response: {
-                        task: newTask,
-                      },
-                    },
+              functionResponses.push({
+                functionResponse: {
+                  name: call.name,
+                  id: call.id,
+                  response: {
+                    task: newTask,
                   },
-                ],
+                },
               });
-            } else if (call.name === "update_task") {
+            }
+
+            else if (call.name === "update_task") {
               const args = call.args as {
                 id: string;
                 title?: string;
@@ -74,36 +77,32 @@ class GeminiService {
                 completed: args.completed,
               });
 
-              response = await chat.sendMessage({
-                message: [
-                  {
-                    functionResponse: {
-                      name: call.name,
-                      response: {
-                        task: updatedTask,
-                      },
-                    },
+              functionResponses.push({
+                functionResponse: {
+                  name: call.name,
+                  id: call.id,
+                  response: {
+                    task: updatedTask,
                   },
-                ],
+                },
               });
-            } else if (call.name === "delete_task") {
+            }
+
+            else if (call.name === "delete_task") {
               const args = call.args as {
                 id: string;
               };
 
               await taskService.remove(args.id);
 
-              response = await chat.sendMessage({
-                message: [
-                  {
-                    functionResponse: {
-                      name: call.name,
-                      response: {
-                        success: true,
-                      },
-                    },
+              functionResponses.push({
+                functionResponse: {
+                  name: call.name,
+                  id: call.id,
+                  response: {
+                    success: true,
                   },
-                ],
+                },
               });
             }
           } catch (error) {
@@ -112,20 +111,25 @@ class GeminiService {
                 ? error.message
                 : "The requested task operation could not be completed.";
 
-            response = await chat.sendMessage({
-              message: [
-                {
-                  functionResponse: {
-                    name: call.name,
-                    response: {
-                      error: errorMessage,
-                    },
-                  },
+            functionResponses.push({
+              functionResponse: {
+                name: call.name,
+                id: call.id,
+                response: {
+                  error: errorMessage,
                 },
-              ],
+              },
             });
           }
         }
+
+        response = await chat.sendMessage({
+          message: functionResponses,
+        });
+      }
+
+      if (loopCount >= maxLoops) {
+        throw new Error("Maximum tool calling limit reached.");
       }
 
       return response.text ?? "No response from Gemini.";

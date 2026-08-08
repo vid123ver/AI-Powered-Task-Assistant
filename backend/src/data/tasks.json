@@ -5,11 +5,6 @@
     "completed": false
   },
   {
-    "id": "6f388764-005a-4fd3-8354-5f3e835d4702",
-    "title": "study operating system",
-    "completed": true
-  },
-  {
     "id": "a5082cb9-cba1-4c89-82bf-1f384afc6c4c",
     "title": "learn ml",
     "completed": false
@@ -27,6 +22,11 @@
   {
     "id": "c5488946-d484-4049-9f8f-c4a0f289658b",
     "title": "Learn Docker",
+    "completed": false
+  },
+  {
+    "id": "b21f3b1a-d2b4-460a-b33b-60248fedb5c8",
+    "title": "Learn ml",
     "completed": false
   }
 ]
