@@ -22,7 +22,6 @@ This repo builds on the Assignment 1 Task Management app. **Phase 1** adds a `PO
 - [Testing in Postman](#testing-in-postman)
 - [Example Prompts](#example-prompts)
 - [Error Handling](#error-handling)
-- [Known Limitations](#known-limitations)
 - [Roadmap](#roadmap)
 
 ---
