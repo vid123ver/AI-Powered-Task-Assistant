@@ -2,6 +2,7 @@ import geminiClient from "../config/gemini";
 import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
 import { systemInstruction } from "../ai/systemInstruction";
+import { AppError } from "../utils/AppError";
 
 class GeminiService {
   async sendMessage(message: string): Promise<string> {
@@ -23,11 +24,93 @@ class GeminiService {
       });
 
       if (response.functionCalls?.length) {
-const functionCalls = response.functionCalls;
+        const functionCalls = response.functionCalls;
+
         for (const call of functionCalls) {
+          try {
+            if (call.name === "list_tasks") {
+              const tasks = await taskService.findAll();
 
-          if (call.name === "list_tasks") {
-            const tasks = await taskService.findAll();
+              response = await chat.sendMessage({
+                message: [
+                  {
+                    functionResponse: {
+                      name: call.name,
+                      response: {
+                        tasks,
+                      },
+                    },
+                  },
+                ],
+              });
+            } else if (call.name === "create_task") {
+              const args = call.args as {
+                title: string;
+              };
+
+              const newTask = await taskService.create(args.title);
+
+              response = await chat.sendMessage({
+                message: [
+                  {
+                    functionResponse: {
+                      name: call.name,
+                      response: {
+                        task: newTask,
+                      },
+                    },
+                  },
+                ],
+              });
+            } else if (call.name === "update_task") {
+              const args = call.args as {
+                id: string;
+                title?: string;
+                completed?: boolean;
+              };
+
+              const updatedTask = await taskService.update(args.id, {
+                title: args.title,
+                completed: args.completed,
+              });
+
+              response = await chat.sendMessage({
+                message: [
+                  {
+                    functionResponse: {
+                      name: call.name,
+                      response: {
+                        task: updatedTask,
+                      },
+                    },
+                  },
+                ],
+              });
+            } else if (call.name === "delete_task") {
+              const args = call.args as {
+                id: string;
+              };
+
+              await taskService.remove(args.id);
+
+              response = await chat.sendMessage({
+                message: [
+                  {
+                    functionResponse: {
+                      name: call.name,
+                      response: {
+                        success: true,
+                      },
+                    },
+                  },
+                ],
+              });
+            }
+          } catch (error) {
+            const errorMessage =
+              error instanceof AppError
+                ? error.message
+                : "The requested task operation could not be completed.";
 
             response = await chat.sendMessage({
               message: [
@@ -35,97 +118,31 @@ const functionCalls = response.functionCalls;
                   functionResponse: {
                     name: call.name,
                     response: {
-                      tasks,
+                      error: errorMessage,
                     },
                   },
                 },
               ],
             });
           }
-
-          else if (call.name === "create_task") {
-            const args = call.args as {
-              title: string;
-            };
-
-            const newTask = await taskService.create(args.title);
-
-            response = await chat.sendMessage({
-              message: [
-                {
-                  functionResponse: {
-                    name: call.name,
-                    response: {
-                      task: newTask,
-                    },
-                  },
-                },
-              ],
-            });
-          }
-
-          else if (call.name === "update_task") {
-            const args = call.args as {
-              id: string;
-              title?: string;
-              completed?: boolean;
-            };
-
-            const updatedTask = await taskService.update(args.id, {
-              title: args.title,
-              completed: args.completed,
-            });
-
-            response = await chat.sendMessage({
-              message: [
-                {
-                  functionResponse: {
-                    name: call.name,
-                    response: {
-                      task: updatedTask,
-                    },
-                  },
-                },
-              ],
-            });
-          }
-          else if (call.name === "delete_task") {
-  const args = call.args as {
-    id: string;
-  };
-
-await taskService.remove(args.id);
-
-response = await chat.sendMessage({
-  message: [
-    {
-      functionResponse: {
-        name: call.name,
-        response: {
-          success: true,
-        },
-      },
-    },
-  ],
-});
-}
         }
       }
 
       return response.text ?? "No response from Gemini.";
     } catch (error) {
       console.error("Gemini API Error:", error);
+
       if ((error as any).status === 429) {
-  throw new Error(
-    "Gemini API quota exceeded. Please wait a while or use another API key."
-  );
-}
+        throw new Error(
+          "Gemini API quota exceeded. Please wait a while or use another API key."
+        );
+      }
 
-if (error instanceof Error) {
-  throw error;
-}
+      if (error instanceof Error) {
+        throw error;
+      }
 
-throw new Error("Unknown error occurred.");
+      throw new Error("Unknown error occurred.");
     }
   }
 }
