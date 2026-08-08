@@ -22,8 +22,9 @@ class GeminiService {
         message,
       });
 
-      if (response.functionCalls && response.functionCalls.length > 0) {
-        for (const call of response.functionCalls) {
+      if (response.functionCalls?.length) {
+const functionCalls = response.functionCalls;
+        for (const call of functionCalls) {
 
           if (call.name === "list_tasks") {
             const tasks = await taskService.findAll();
@@ -93,20 +94,20 @@ class GeminiService {
     id: string;
   };
 
-  const deleted = await taskService.remove(args.id);
+await taskService.remove(args.id);
 
-  response = await chat.sendMessage({
-    message: [
-      {
-        functionResponse: {
-          name: call.name,
-          response: {
-            success: deleted,
-          },
+response = await chat.sendMessage({
+  message: [
+    {
+      functionResponse: {
+        name: call.name,
+        response: {
+          success: true,
         },
       },
-    ],
-  });
+    },
+  ],
+});
 }
         }
       }
@@ -120,7 +121,11 @@ class GeminiService {
   );
 }
 
-throw error;
+if (error instanceof Error) {
+  throw error;
+}
+
+throw new Error("Unknown error occurred.");
     }
   }
 }
