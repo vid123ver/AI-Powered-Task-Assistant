@@ -326,16 +326,6 @@ The `systemInstruction` (in `backend/src/ai/systemInstruction.ts`) additionally 
 
 ---
 
-## Known Limitations
-
-- **Sessions are in-memory** — restarting the backend clears all chat history (`Map` is not persisted to disk). Fine for this phase; would need a DB/store for production.
-- **Task model has no `priority` or `dueDate` field** — it's still `{ id, title, completed }`, unchanged from Assignment 1. The assistant can talk about priority/due dates conversationally, but nothing is actually stored or filtered on those fields yet, since the underlying data model wasn't extended in this phase.
-- **No streaming** — `/chat` returns the full reply at once; the frontend has no loading UI for it yet since there's no chat page.
-- **No MCP server yet** — tools currently run in-process via direct Gemini function calling, not as a standalone MCP server. That's Phase 2.
-- **No chat UI yet** — the frontend is untouched from Assignment 1; `/chat` is currently only testable via Postman/curl. That's Phase 3.
-
----
-
 ## Roadmap
 
 - [x] **Phase 1** — `/chat` endpoint, 4 tools, tool-call loop, session-based history, error handling
