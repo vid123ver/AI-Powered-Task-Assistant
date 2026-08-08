@@ -15,11 +15,6 @@
     "completed": false
   },
   {
-    "id": "2312b8da-e93c-479d-8ccd-1f721df38dbb",
-    "title": "Learn Docker",
-    "completed": false
-  },
-  {
     "id": "c5488946-d484-4049-9f8f-c4a0f289658b",
     "title": "Learn Docker",
     "completed": false
@@ -32,6 +27,11 @@
   {
     "id": "361345a1-c8fc-4170-baf1-6f464d63d192",
     "title": "Study Computer Architecture",
+    "completed": true
+  },
+  {
+    "id": "31d7c4ee-e571-4692-a419-7220a9e0ba4c",
+    "title": "Study Cybersecurity",
     "completed": true
   }
 ]

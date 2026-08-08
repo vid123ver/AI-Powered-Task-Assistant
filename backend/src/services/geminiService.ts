@@ -38,7 +38,11 @@ class GeminiService {
       let loopCount = 0;
       const maxLoops = 10;
 
-      while (response.functionCalls?.length && loopCount < maxLoops) {
+      while (response.functionCalls?.length) {
+        if (loopCount >= maxLoops) {
+          throw new Error("Maximum tool calling limit reached.");
+        }
+
         loopCount++;
 
         const functionResponses = [];
@@ -84,10 +88,13 @@ class GeminiService {
                 completed?: boolean;
               };
 
-              const updatedTask = await taskService.update(args.id, {
-                title: args.title,
-                completed: args.completed,
-              });
+              const updatedTask = await taskService.update(
+                args.id,
+                {
+                  title: args.title,
+                  completed: args.completed,
+                }
+              );
 
               functionResponses.push({
                 functionResponse: {
@@ -117,11 +124,25 @@ class GeminiService {
                 },
               });
             }
+
+            else {
+              functionResponses.push({
+                functionResponse: {
+                  name: call.name,
+                  id: call.id,
+                  response: {
+                    error: `Unknown tool: ${call.name}`,
+                  },
+                },
+              });
+            }
           } catch (error) {
             const errorMessage =
               error instanceof AppError
                 ? error.message
-                : "The requested task operation could not be completed.";
+                : error instanceof Error
+                  ? error.message
+                  : "The requested task operation could not be completed.";
 
             functionResponses.push({
               functionResponse: {
@@ -138,10 +159,6 @@ class GeminiService {
         response = await chat.sendMessage({
           message: functionResponses,
         });
-      }
-
-      if (loopCount >= maxLoops) {
-        throw new Error("Maximum tool calling limit reached.");
       }
 
       return response.text ?? "No response from Gemini.";
