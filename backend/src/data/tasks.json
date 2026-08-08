@@ -28,5 +28,10 @@
     "id": "b21f3b1a-d2b4-460a-b33b-60248fedb5c8",
     "title": "Learn ml",
     "completed": false
+  },
+  {
+    "id": "361345a1-c8fc-4170-baf1-6f464d63d192",
+    "title": "Study Computer Architecture",
+    "completed": true
   }
 ]

@@ -1,3 +1,4 @@
+import { Chat } from "@google/genai";
 import geminiClient from "../config/gemini";
 import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
@@ -5,19 +6,30 @@ import { systemInstruction } from "../ai/systemInstruction";
 import { AppError } from "../utils/AppError";
 
 class GeminiService {
-  async sendMessage(message: string): Promise<string> {
+  private sessions = new Map<string, Chat>();
+
+  async sendMessage(
+    sessionId: string,
+    message: string
+  ): Promise<string> {
     try {
-      const chat = geminiClient.chats.create({
-        model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-        config: {
-          systemInstruction,
-          tools: [
-            {
-              functionDeclarations: taskTools,
-            },
-          ],
-        },
-      });
+      let chat = this.sessions.get(sessionId);
+
+      if (!chat) {
+        chat = geminiClient.chats.create({
+          model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+          config: {
+            systemInstruction,
+            tools: [
+              {
+                functionDeclarations: taskTools,
+              },
+            ],
+          },
+        });
+
+        this.sessions.set(sessionId, chat);
+      }
 
       let response = await chat.sendMessage({
         message,
