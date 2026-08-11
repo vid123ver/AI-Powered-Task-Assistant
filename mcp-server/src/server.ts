@@ -171,7 +171,47 @@ server.registerTool(
     };
   }
 );
+server.registerTool(
+  "get_task_summary",
+  {
+    description:
+      "Use this tool when the user wants an overview or summary of their tasks. It retrieves the current tasks and returns the total number of tasks along with counts grouped by status and priority. Do not use this tool when the user wants the full details of individual tasks.",
+    inputSchema: z.object({})
+  },
+  async () => {
+    const response = await fetch("http://localhost:5001/tasks");
 
+    if (!response.ok) {
+      throw new Error(`Task API returned status ${response.status}`);
+    }
+
+    const tasks = await response.json();
+
+    const byStatus: Record<string, number> = {};
+    const byPriority: Record<string, number> = {};
+
+    for (const task of tasks) {
+      byStatus[task.status] = (byStatus[task.status] || 0) + 1;
+      byPriority[task.priority] =
+        (byPriority[task.priority] || 0) + 1;
+    }
+
+    const summary = {
+      totalTasks: tasks.length,
+      byStatus,
+      byPriority
+    };
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(summary, null, 2)
+        }
+      ]
+    };
+  }
+);
 async function main() {
   const transport = new StdioServerTransport();
 
