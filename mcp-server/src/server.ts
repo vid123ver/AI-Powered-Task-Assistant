@@ -81,6 +81,56 @@ server.registerTool(
     };
   }
 );
+server.registerTool(
+  "update_task",
+  {
+    description:
+      "Use this tool when the user wants to modify an existing task. The task ID is required. Use the title field when the user wants to rename the task and the completed field when the user wants to change its completion status. Do not use this tool to create a new task.",
+    inputSchema: z.object({
+      id: z.string().min(1),
+      title: z.string().min(1).optional(),
+      completed: z.boolean().optional()
+    })
+  },
+  async ({ id, title, completed }) => {
+    const response = await fetch(
+      `http://localhost:5001/tasks/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          ...(title !== undefined && { title }),
+          ...(completed !== undefined && { completed })
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Task API returned status ${response.status}`);
+    }
+
+    const task = await response.json();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              id: task.id,
+              title: task.title,
+              completed: task.completed
+            },
+            null,
+            2
+          )
+        }
+      ]
+    };
+  }
+);
 
 async function main() {
   const transport = new StdioServerTransport();
