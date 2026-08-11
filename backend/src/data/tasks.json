@@ -1,13 +1,8 @@
 [
   {
-    "id": "8b2fd887-1349-49df-9a2d-7c07e703ab8f",
-    "title": "bank visit",
-    "completed": false
-  },
-  {
     "id": "a5082cb9-cba1-4c89-82bf-1f384afc6c4c",
-    "title": "learn ml",
-    "completed": false
+    "title": "implement ml",
+    "completed": true
   },
   {
     "id": "3383646f-9309-4d94-8a0a-c88ce866fe85",

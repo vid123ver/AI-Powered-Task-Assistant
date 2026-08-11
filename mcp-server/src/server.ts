@@ -132,6 +132,46 @@ server.registerTool(
   }
 );
 
+
+server.registerTool(
+  "delete_task",
+  {
+    description:
+      "Use this tool when the user wants to permanently remove an existing task. The task ID is required. Do not use this tool when the user only wants to mark a task as completed or modify its details.",
+    inputSchema: z.object({
+      id: z.string().min(1)
+    })
+  },
+  async ({ id }) => {
+    const response = await fetch(
+      `http://localhost:5001/tasks/${id}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Task API returned status ${response.status}`);
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              success: true,
+              id
+            },
+            null,
+            2
+          )
+        }
+      ]
+    };
+  }
+);
+
 async function main() {
   const transport = new StdioServerTransport();
 
