@@ -34,6 +34,54 @@ server.registerTool(
   }
 );
 
+
+server.registerTool(
+  "create_task",
+  {
+    description:
+      "Use this tool when the user wants to create or add a new task. The task must have a title. Use the completed field only when the user explicitly specifies whether the new task is completed.",
+    inputSchema: z.object({
+      title: z.string().min(1),
+      completed: z.boolean().optional()
+    })
+  },
+  async ({ title, completed }) => {
+    const response = await fetch("http://localhost:5001/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        completed: completed ?? false
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Task API returned status ${response.status}`);
+    }
+
+    const task = await response.json();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              id: task.id,
+              title: task.title,
+              completed: task.completed
+            },
+            null,
+            2
+          )
+        }
+      ]
+    };
+  }
+);
+
 async function main() {
   const transport = new StdioServerTransport();
 
