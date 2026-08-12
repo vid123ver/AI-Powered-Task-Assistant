@@ -42,10 +42,11 @@ server.registerTool(
       "Use this tool when the user wants to create or add a new task. The task must have a title. Use the completed field only when the user explicitly specifies whether the new task is completed.",
     inputSchema: z.object({
       title: z.string().min(1),
-      completed: z.boolean().optional()
+      completed: z.boolean().optional(),
+      priority: z.enum(["low", "medium", "high"]).optional()
     })
   },
-  async ({ title, completed }) => {
+  async ({ title, completed , priority }) => {
     const response = await fetch("http://localhost:5001/tasks", {
       method: "POST",
       headers: {
@@ -53,7 +54,8 @@ server.registerTool(
       },
       body: JSON.stringify({
         title,
-        completed: completed ?? false
+        completed: completed ?? false,
+        priority: priority?? "medium"
       })
     });
 
@@ -71,7 +73,8 @@ server.registerTool(
             {
               id: task.id,
               title: task.title,
-              completed: task.completed
+              completed: task.completed,
+              priority: task.priority
             },
             null,
             2
@@ -89,10 +92,11 @@ server.registerTool(
     inputSchema: z.object({
       id: z.string().min(1),
       title: z.string().min(1).optional(),
-      completed: z.boolean().optional()
+      completed: z.boolean().optional(),
+      priority: z.enum(["low", "medium", "high"]).optional()
     })
   },
-  async ({ id, title, completed }) => {
+  async ({ id, title, completed, priority }) => {
     const response = await fetch(
       `http://localhost:5001/tasks/${id}`,
       {
@@ -102,7 +106,8 @@ server.registerTool(
         },
         body: JSON.stringify({
           ...(title !== undefined && { title }),
-          ...(completed !== undefined && { completed })
+          ...(completed !== undefined && { completed }),
+          ...(priority !== undefined && { priority })
         })
       }
     );
@@ -121,7 +126,8 @@ server.registerTool(
             {
               id: task.id,
               title: task.title,
-              completed: task.completed
+              completed: task.completed,
+              priority: task.priority
             },
             null,
             2
@@ -191,9 +197,13 @@ server.registerTool(
     const byPriority: Record<string, number> = {};
 
     for (const task of tasks) {
-      byStatus[task.status] = (byStatus[task.status] || 0) + 1;
-      byPriority[task.priority] =
-        (byPriority[task.priority] || 0) + 1;
+      const status = task.completed ? "completed" : "pending";
+
+      byStatus[status] = (byStatus[status] || 0) + 1;
+
+      const priority = task.priority ?? "medium";
+
+      byPriority[priority] = (byPriority[priority] || 0) + 1;
     }
 
     const summary = {

@@ -23,8 +23,8 @@ export const createTask = asyncHandler(async (req: Request, res: Response) => {
   if (!titleCheck.valid) {
     throw new AppError(titleCheck.message as string, 400);
   }
-
-  const newTask = await taskService.create(titleCheck.value as string);
+  const priority = req.body.priority ?? "medium";
+  const newTask = await taskService.create(titleCheck.value as string , priority);
 
   res.status(201).json(newTask);
 });
@@ -47,6 +47,7 @@ export const updateTask = asyncHandler(async (req: Request, res: Response) => {
   const updatedTask = await taskService.update(id, {
     title: titleCheck.value,
     completed: req.body.completed,
+    priority: req.body.priority
   });
 
   res.json(updatedTask);

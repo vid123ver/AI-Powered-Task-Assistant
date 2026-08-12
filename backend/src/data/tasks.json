@@ -33,5 +33,53 @@
     "id": "00d4b3a5-fd27-4388-8177-80b5f60cdc6e",
     "title": "learn mcp",
     "completed": false
+  },
+  {
+    "id": "939ef9e2-2eae-4227-84a9-3adb717f9bf0",
+    "title": "create designs",
+    "completed": false,
+    "priority": "medium"
+  },
+  {
+    "id": "97c4c1f9-b224-43e2-ae50-a0b81bd7ccb8",
+    "title": "laptop buy",
+    "completed": false,
+    "priority": "medium"
+  },
+  {
+    "id": "116bb2fe-2341-43a6-a271-d3fc46b798e7",
+    "title": "website creation",
+    "completed": false,
+    "priority": "medium"
+  },
+  {
+    "id": "8f95f1e9-bef7-41fa-b742-4178aff03310",
+    "title": "buy phone",
+    "completed": false,
+    "priority": "low"
+  },
+  {
+    "id": "6d9ef546-ffb1-4190-8615-6dca919cf924",
+    "title": "website maintain",
+    "completed": false,
+    "priority": "medium"
+  },
+  {
+    "id": "2530b73d-daf3-43c1-a352-bd42c6150d06",
+    "title": "reading books",
+    "completed": false,
+    "priority": "medium"
+  },
+  {
+    "id": "2579974c-2838-4563-ad31-1f3c4b5d2e9e",
+    "title": "tv repair",
+    "completed": false,
+    "priority": "high"
+  },
+  {
+    "id": "282d4946-1bd7-4672-89eb-db2062254599",
+    "title": "running",
+    "completed": false,
+    "priority": "high"
   }
 ]
