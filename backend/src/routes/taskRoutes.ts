@@ -7,8 +7,10 @@ import {
   deleteTask,
   toggleTask
 } from "../controllers/taskController";
-
+import { apiAuth } from "../middlewares/apiAuth";
 const router = Router();
+
+router.use(apiAuth);
 
 router.get("/", getAllTasks);
 

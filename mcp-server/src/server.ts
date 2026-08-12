@@ -1,6 +1,27 @@
+import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+const taskApiToken = process.env.TASK_API_TOKEN;//auth layer for task management backend api(s)
+
+if (!taskApiToken) {
+  throw new Error("TASK_API_TOKEN is not configured");
+}
+
+const apiRequest = async (
+  url: string,
+  options: RequestInit = {}
+) => {
+  const headers = new Headers(options.headers);
+
+  headers.set("Authorization", `Bearer ${taskApiToken}`);
+
+  return fetch(url, {
+    ...options,
+    headers
+  });
+};
 
 const server = new McpServer({
   name: "task-management-server",
@@ -15,7 +36,7 @@ server.registerTool(
     inputSchema: z.object({})
   },
   async () => {
-    const response = await fetch("http://localhost:5001/tasks");
+    const response = await apiRequest("http://localhost:5001/tasks");
 
     if (!response.ok) {
       throw new Error(`Task API returned status ${response.status}`);
@@ -47,7 +68,7 @@ server.registerTool(
     })
   },
   async ({ title, completed , priority }) => {
-    const response = await fetch("http://localhost:5001/tasks", {
+    const response = await apiRequest("http://localhost:5001/tasks", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -97,7 +118,7 @@ server.registerTool(
     })
   },
   async ({ id, title, completed, priority }) => {
-    const response = await fetch(
+    const response = await apiRequest(
       `http://localhost:5001/tasks/${id}`,
       {
         method: "PUT",
@@ -149,7 +170,7 @@ server.registerTool(
     })
   },
   async ({ id }) => {
-    const response = await fetch(
+    const response = await apiRequest(
       `http://localhost:5001/tasks/${id}`,
       {
         method: "DELETE"
@@ -185,7 +206,7 @@ server.registerTool(
     inputSchema: z.object({})
   },
   async () => {
-    const response = await fetch("http://localhost:5001/tasks");
+    const response = await apiRequest("http://localhost:5001/tasks");
 
     if (!response.ok) {
       throw new Error(`Task API returned status ${response.status}`);
@@ -232,7 +253,7 @@ server.registerTool(
     })
   },
   async ({ query }) => {
-    const response = await fetch("http://localhost:5001/tasks");
+    const response = await apiRequest("http://localhost:5001/tasks");
 
     if (!response.ok) {
       throw new Error(`Task API returned status ${response.status}`);

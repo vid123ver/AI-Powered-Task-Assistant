@@ -5,8 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx src/server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js"
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^17.4.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
