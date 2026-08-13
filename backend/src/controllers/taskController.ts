@@ -31,25 +31,45 @@ export const createTask = asyncHandler(async (req: Request, res: Response) => {
 
 export const updateTask = asyncHandler(async (req: Request, res: Response) => {
   const id = String(req.params.id);
-
-  const titleCheck = validateTitle(req.body.title);
-
-  if (!titleCheck.valid) {
-    throw new AppError(titleCheck.message as string, 400);
+ 
+  // title is optional on update — only validate/apply it if the caller actually sent one.
+  // (Requiring it unconditionally broke partial updates like "just mark this completed"
+  // or "just change priority", which is exactly what the MCP update_task tool sends.)
+  let title: string | undefined;
+ 
+  if (req.body.title !== undefined) {
+    const titleCheck = validateTitle(req.body.title);
+ 
+    if (!titleCheck.valid) {
+      throw new AppError(titleCheck.message as string, 400);
+    }
+ 
+    title = titleCheck.value;
   }
-
+ 
   const completedCheck = validateCompleted(req.body.completed);
-
+ 
   if (!completedCheck.valid) {
     throw new AppError(completedCheck.message as string, 400);
   }
-
+ 
+  if (
+    req.body.title === undefined &&
+    req.body.completed === undefined &&
+    req.body.priority === undefined
+  ) {
+    throw new AppError(
+      "At least one of title, completed, or priority must be provided",
+      400
+    );
+  }
+ 
   const updatedTask = await taskService.update(id, {
-    title: titleCheck.value,
+    title,
     completed: req.body.completed,
     priority: req.body.priority
   });
-
+ 
   res.json(updatedTask);
 });
 
