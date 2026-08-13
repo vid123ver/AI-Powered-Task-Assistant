@@ -53,12 +53,6 @@
     "priority": "medium"
   },
   {
-    "id": "8f95f1e9-bef7-41fa-b742-4178aff03310",
-    "title": "buy phone",
-    "completed": false,
-    "priority": "low"
-  },
-  {
     "id": "6d9ef546-ffb1-4190-8615-6dca919cf924",
     "title": "website maintain",
     "completed": false,
@@ -79,6 +73,12 @@
   {
     "id": "282d4946-1bd7-4672-89eb-db2062254599",
     "title": "running",
+    "completed": false,
+    "priority": "high"
+  },
+  {
+    "id": "dffd186e-4337-45eb-8187-532fb6605075",
+    "title": "Amazon shopping",
     "completed": false,
     "priority": "high"
   }
