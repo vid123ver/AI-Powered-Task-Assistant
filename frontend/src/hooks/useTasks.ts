@@ -14,14 +14,17 @@ export const useTasks = () => {
     setError(null);
 
     try {
-      const data = await taskApi.getTasks();
-      setTasks(data);
-    } catch (error) {
-      
-      setError(GENERIC_ERROR_MESSAGE);
-    } finally {
-      setIsLoading(false);
-    }
+    const data = await taskApi.getTasks();
+
+    console.log("Tasks API response:", data);
+    console.log("Is array:", Array.isArray(data));
+
+    setTasks(data);
+  } catch (error) {
+    setError(GENERIC_ERROR_MESSAGE);
+  } finally {
+    setIsLoading(false);
+  }
   };
 
   const addTask = async (title: string) => {
