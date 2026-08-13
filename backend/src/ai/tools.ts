@@ -24,10 +24,17 @@ export const taskTools: FunctionDeclaration[] = [
           description:
             "The title or description of the new task provided by the user.",
         },
+        priority: {
+          type: Type.STRING,
+          enum: ["low", "medium", "high"],
+          description:
+            "The priority of the task. Only set this if the user explicitly states a priority (e.g. 'high priority', 'low priority', 'urgent' = high). If the user does not mention a priority, omit this field entirely and let it default.",
+        },
       },
       required: ["title"],
     },
   },
+ 
 
   {
     name: "update_task",
@@ -49,10 +56,17 @@ export const taskTools: FunctionDeclaration[] = [
           description:
             "The completion status of the task. True means completed and false means pending.",
         },
+        priority: {
+          type: Type.STRING,
+          enum: ["low", "medium", "high"],
+          description:
+            "The new priority of the task. Only set this if the user explicitly asks to change the task's priority.",
+        },
       },
       required: ["id"],
     },
   },
+ 
 
   {
     name: "delete_task",

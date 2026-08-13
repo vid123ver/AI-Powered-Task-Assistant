@@ -66,9 +66,13 @@ class GeminiService {
             else if (call.name === "create_task") {
               const args = call.args as {
                 title: string;
+                priority?: "low" | "medium" | "high";
               };
 
-              const newTask = await taskService.create(args.title);
+              const newTask = await taskService.create(
+                args.title,
+                args.priority ?? "medium"
+              );
 
               functionResponses.push({
                 functionResponse: {
@@ -86,6 +90,7 @@ class GeminiService {
                 id: string;
                 title?: string;
                 completed?: boolean;
+                priority?: "low" | "medium" | "high";
               };
 
               const updatedTask = await taskService.update(
@@ -93,6 +98,7 @@ class GeminiService {
                 {
                   title: args.title,
                   completed: args.completed,
+                  priority: args.priority,
                 }
               );
 
