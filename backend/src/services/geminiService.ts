@@ -4,6 +4,12 @@ import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
 import { systemInstruction } from "../ai/systemInstruction";
 import { AppError } from "../utils/AppError";
+import type { ChatAction } from "../types/chat";
+
+interface GeminiChatResult {
+  reply: string;
+  actions: ChatAction[];
+}
 
 class GeminiService {
   private sessions = new Map<string, Chat>();
@@ -11,7 +17,7 @@ class GeminiService {
   async sendMessage(
     sessionId: string,
     message: string
-  ): Promise<string> {
+  ): Promise<GeminiChatResult> {
     try {
       let chat = this.sessions.get(sessionId);
 
@@ -31,6 +37,8 @@ class GeminiService {
         this.sessions.set(sessionId, chat);
       }
 
+      const actions: ChatAction[] = [];
+
       let response = await chat.sendMessage({
         message,
       });
@@ -40,7 +48,10 @@ class GeminiService {
 
       while (response.functionCalls?.length) {
         if (loopCount >= maxLoops) {
-          throw new Error("Maximum tool calling limit reached.");
+          throw new AppError(
+            "Maximum tool calling limit reached.",
+            500
+          );
         }
 
         loopCount++;
@@ -51,6 +62,11 @@ class GeminiService {
           try {
             if (call.name === "list_tasks") {
               const tasks = await taskService.findAll();
+
+              actions.push({
+                type: "list_tasks",
+                count: tasks.length,
+              });
 
               functionResponses.push({
                 functionResponse: {
@@ -73,6 +89,14 @@ class GeminiService {
                 args.title,
                 args.priority ?? "medium"
               );
+
+              actions.push({
+                type: "create_task",
+                task: {
+                  id: newTask.id,
+                  title: newTask.title,
+                },
+              });
 
               functionResponses.push({
                 functionResponse: {
@@ -102,6 +126,14 @@ class GeminiService {
                 }
               );
 
+              actions.push({
+                type: "update_task",
+                task: {
+                  id: updatedTask.id,
+                  title: updatedTask.title,
+                },
+              });
+
               functionResponses.push({
                 functionResponse: {
                   name: call.name,
@@ -118,7 +150,17 @@ class GeminiService {
                 id: string;
               };
 
+              const task = await taskService.findById(args.id);
+
               await taskService.remove(args.id);
+
+              actions.push({
+                type: "delete_task",
+                task: {
+                  id: task.id,
+                  title: task.title,
+                },
+              });
 
               functionResponses.push({
                 functionResponse: {
@@ -167,48 +209,51 @@ class GeminiService {
         });
       }
 
-      return response.text ?? "No response from Gemini.";
+      return {
+        reply: response.text ?? "No response from Gemini.",
+        actions,
+      };
     } catch (error) {
-  console.error("Gemini API Error:", error);
+      console.error("Gemini API Error:", error);
 
-  const status =
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    typeof error.status === "number"
-      ? error.status
-      : undefined;
+      const status =
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number"
+          ? error.status
+          : undefined;
 
-  if (status === 429) {
-    throw new AppError(
-      "Gemini API rate limit reached. Please try again later.",
-      429
-    );
-  }
+      if (status === 429) {
+        throw new AppError(
+          "Gemini API rate limit reached. Please try again later.",
+          429
+        );
+      }
 
-  if (status === 503) {
-    throw new AppError(
-      "The AI service is temporarily unavailable. Please try again shortly.",
-      503
-    );
-  }
+      if (status === 503) {
+        throw new AppError(
+          "The AI service is temporarily unavailable. Please try again shortly.",
+          503
+        );
+      }
 
-  if (error instanceof AppError) {
-    throw error;
-  }
+      if (error instanceof AppError) {
+        throw error;
+      }
 
-  if (error instanceof Error) {
-    throw new AppError(
-      "Something went wrong while communicating with the AI service.",
-      500
-    );
-  }
+      if (error instanceof Error) {
+        throw new AppError(
+          "Something went wrong while communicating with the AI service.",
+          500
+        );
+      }
 
-  throw new AppError(
-    "Unknown error occurred while communicating with the AI service.",
-    500
-  );
-}
+      throw new AppError(
+        "Unknown error occurred while communicating with the AI service.",
+        500
+      );
+    }
   }
 }
 

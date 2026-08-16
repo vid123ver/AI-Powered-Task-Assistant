@@ -4,6 +4,8 @@ import {
   ChatApiError,
   sendChatMessage,
 } from "../../api/chatApi";
+import ActionCard from "./ActionCard";
+
 function ChatPage() {
   const [message, setMessage] = useState("");
 
@@ -20,68 +22,70 @@ function ChatPage() {
     },
   ]);
 
-const handleSend = async () => {
-  const trimmedMessage = message.trim();
+  const handleSend = async () => {
+    const trimmedMessage = message.trim();
 
-  if (!trimmedMessage || isLoading) {
-    return;
-  }
+    if (!trimmedMessage || isLoading) {
+      return;
+    }
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  const newMessage: ChatMessage = {
-    id: crypto.randomUUID(),
-    role: "user",
-    content: trimmedMessage,
-  };
-
-  setMessages((previousMessages) => [
-    ...previousMessages,
-    newMessage,
-  ]);
-
-  setMessage("");
-
-  try {
-    const response = await sendChatMessage({
-      sessionId,
-      message: trimmedMessage,
-    });
-
-    const assistantMessage: ChatMessage = {
+    const newMessage: ChatMessage = {
       id: crypto.randomUUID(),
-      role: "assistant",
-      content: response.reply,
+      role: "user",
+      content: trimmedMessage,
     };
 
     setMessages((previousMessages) => [
       ...previousMessages,
-      assistantMessage,
+      newMessage,
     ]);
-  } catch (error) {
-  console.error("Chat request failed:", error);
 
-  let errorMessage =
-    "Sorry, I couldn't process your request. Please try again.";
+    setMessage("");
 
-  if (error instanceof ChatApiError) {
-    errorMessage = error.message;
-  }
+    try {
+      const response = await sendChatMessage({
+        sessionId,
+        message: trimmedMessage,
+      });
 
-  const assistantErrorMessage: ChatMessage = {
-    id: crypto.randomUUID(),
-    role: "assistant",
-    content: errorMessage,
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: response.reply,
+        actions: response.actions,
+      };
+
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        assistantMessage,
+      ]);
+    } catch (error) {
+      console.error("Chat request failed:", error);
+
+      let errorMessage =
+        "Sorry, I couldn't process your request. Please try again.";
+
+      if (error instanceof ChatApiError) {
+        errorMessage = error.message;
+      }
+
+      const assistantErrorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: errorMessage,
+      };
+
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        assistantErrorMessage,
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  setMessages((previousMessages) => [
-    ...previousMessages,
-    assistantErrorMessage,
-  ]);
-} finally {
-  setIsLoading(false);
-}
-};
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
@@ -122,21 +126,26 @@ const handleSend = async () => {
               <p className="text-sm">
                 {chatMessage.content}
               </p>
+
+              {chatMessage.actions?.map((action, index) => (
+                <ActionCard
+                  key={`${chatMessage.id}-action-${index}`}
+                  action={action}
+                />
+              ))}
             </div>
           </div>
         ))}
 
         {isLoading && (
-    <div className="flex justify-start">
-      <div className="max-w-[80%] rounded-lg bg-gray-100 p-3">
-        <p className="text-sm text-gray-500">
-          AI is thinking...
-        </p>
-      </div>
-    </div>
-  )}
-
-
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg bg-gray-100 p-3">
+              <p className="text-sm text-gray-500">
+                AI is thinking...
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="border-t p-4">
@@ -144,9 +153,7 @@ const handleSend = async () => {
           <input
             type="text"
             value={message}
-            onChange={(event) =>
-              setMessage(event.target.value)
-            }
+            onChange={(event) => setMessage(event.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isLoading}
             placeholder="Ask me to manage your tasks..."
