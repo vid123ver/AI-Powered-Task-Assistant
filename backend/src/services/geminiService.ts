@@ -169,20 +169,46 @@ class GeminiService {
 
       return response.text ?? "No response from Gemini.";
     } catch (error) {
-      console.error("Gemini API Error:", error);
+  console.error("Gemini API Error:", error);
 
-      if ((error as any).status === 429) {
-        throw new Error(
-          "Gemini API quota exceeded. Please wait a while or use another API key."
-        );
-      }
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+      ? error.status
+      : undefined;
 
-      if (error instanceof Error) {
-        throw error;
-      }
+  if (status === 429) {
+    throw new AppError(
+      "Gemini API rate limit reached. Please try again later.",
+      429
+    );
+  }
 
-      throw new Error("Unknown error occurred.");
-    }
+  if (status === 503) {
+    throw new AppError(
+      "The AI service is temporarily unavailable. Please try again shortly.",
+      503
+    );
+  }
+
+  if (error instanceof AppError) {
+    throw error;
+  }
+
+  if (error instanceof Error) {
+    throw new AppError(
+      "Something went wrong while communicating with the AI service.",
+      500
+    );
+  }
+
+  throw new AppError(
+    "Unknown error occurred while communicating with the AI service.",
+    500
+  );
+}
   }
 }
 

@@ -32,6 +32,20 @@ export const sendChatMessage = async (
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
 
+      if (status === 429) {
+        throw new ChatApiError(
+          "You've reached the AI request limit. Please try again later.",
+          status
+        );
+      }
+
+      if (status === 503) {
+        throw new ChatApiError(
+          "The AI service is temporarily unavailable. Please try again shortly.",
+          status
+        );
+      }
+
       const serverMessage = error.response?.data?.message;
 
       throw new ChatApiError(

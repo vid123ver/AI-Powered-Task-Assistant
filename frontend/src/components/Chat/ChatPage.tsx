@@ -1,7 +1,9 @@
 import { useState } from "react";
 import type { ChatMessage } from "../../types/Chat";
-import { sendChatMessage } from "../../api/chatApi";
-
+import {
+  ChatApiError,
+  sendChatMessage,
+} from "../../api/chatApi";
 function ChatPage() {
   const [message, setMessage] = useState("");
 
@@ -57,22 +59,28 @@ const handleSend = async () => {
       assistantMessage,
     ]);
   } catch (error) {
-    console.error("Chat request failed:", error);
+  console.error("Chat request failed:", error);
 
-    const errorMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content:
-        "Sorry, I couldn't process your request. Please try again.",
-    };
+  let errorMessage =
+    "Sorry, I couldn't process your request. Please try again.";
 
-    setMessages((previousMessages) => [
-      ...previousMessages,
-      errorMessage,
-    ]);
-  } finally {
-    setIsLoading(false);
+  if (error instanceof ChatApiError) {
+    errorMessage = error.message;
   }
+
+  const assistantErrorMessage: ChatMessage = {
+    id: crypto.randomUUID(),
+    role: "assistant",
+    content: errorMessage,
+  };
+
+  setMessages((previousMessages) => [
+    ...previousMessages,
+    assistantErrorMessage,
+  ]);
+} finally {
+  setIsLoading(false);
+}
 };
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
