@@ -5,6 +5,8 @@ import { sendChatMessage } from "../../api/chatApi";
 function ChatPage() {
   const [message, setMessage] = useState("");
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [sessionId] = useState(() => crypto.randomUUID());
 
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -22,6 +24,7 @@ function ChatPage() {
   if (!trimmedMessage) {
     return;
   }
+  setIsLoading(true);
 
   const newMessage: ChatMessage = {
     id: crypto.randomUUID(),
@@ -51,6 +54,7 @@ function ChatPage() {
     ...previousMessages,
     assistantMessage,
   ]);
+  setIsLoading(false);
 };
 
   const handleKeyDown = (
@@ -96,6 +100,18 @@ function ChatPage() {
             </div>
           </div>
         ))}
+
+        {isLoading && (
+    <div className="flex justify-start">
+      <div className="max-w-[80%] rounded-lg bg-gray-100 p-3">
+        <p className="text-sm text-gray-500">
+          AI is thinking...
+        </p>
+      </div>
+    </div>
+  )}
+
+
       </div>
 
       <div className="border-t p-4">
@@ -107,13 +123,15 @@ function ChatPage() {
               setMessage(event.target.value)
             }
             onKeyDown={handleKeyDown}
+            disabled={isLoading}
             placeholder="Ask me to manage your tasks..."
             className="flex-1 rounded-lg border px-4 py-2 outline-none"
           />
 
           <button
             onClick={handleSend}
-            className="rounded-lg bg-black px-5 py-2 text-white"
+            disabled={isLoading}
+            className="rounded-lg bg-black px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>
