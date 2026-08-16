@@ -18,12 +18,13 @@ function ChatPage() {
     },
   ]);
 
-  const handleSend = async () => {
+const handleSend = async () => {
   const trimmedMessage = message.trim();
 
-  if (!trimmedMessage) {
+  if (!trimmedMessage || isLoading) {
     return;
   }
+
   setIsLoading(true);
 
   const newMessage: ChatMessage = {
@@ -39,24 +40,40 @@ function ChatPage() {
 
   setMessage("");
 
-  const response = await sendChatMessage({
-    sessionId,
-    message: trimmedMessage,
-  });
+  try {
+    const response = await sendChatMessage({
+      sessionId,
+      message: trimmedMessage,
+    });
 
-  const assistantMessage: ChatMessage = {
-    id: crypto.randomUUID(),
-    role: "assistant",
-    content: response.reply,
-  };
+    const assistantMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: response.reply,
+    };
 
-  setMessages((previousMessages) => [
-    ...previousMessages,
-    assistantMessage,
-  ]);
-  setIsLoading(false);
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      assistantMessage,
+    ]);
+  } catch (error) {
+    console.error("Chat request failed:", error);
+
+    const errorMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content:
+        "Sorry, I couldn't process your request. Please try again.",
+    };
+
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      errorMessage,
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
 };
-
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
