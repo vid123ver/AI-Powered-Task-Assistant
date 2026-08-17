@@ -12,7 +12,6 @@ interface ChatPageProps {
 
 function ChatPage({ onTasksChanged }: ChatPageProps) {
   const [message, setMessage] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
 
   const [sessionId] = useState(() => {
@@ -25,10 +24,7 @@ function ChatPage({ onTasksChanged }: ChatPageProps) {
 
     const newSessionId = crypto.randomUUID();
 
-    sessionStorage.setItem(
-      "chatSessionId",
-      newSessionId
-    );
+    sessionStorage.setItem("chatSessionId", newSessionId);
 
     return newSessionId;
   });
@@ -144,18 +140,66 @@ function ChatPage({ onTasksChanged }: ChatPageProps) {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b p-4">
-        <h1 className="text-xl font-semibold">
-          AI Task Assistant
-        </h1>
+    <div className="flex h-[calc(100vh-120px)] min-h-[500px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg sm:h-[calc(100vh-140px)]">
 
-        <p className="text-sm text-gray-500">
-          Manage your tasks using natural language
-        </p>
-      </div>
+      {/* Header */}
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <header className="relative shrink-0 overflow-hidden border-b border-gray-700 bg-gray-900 px-4 py-4 text-white sm:px-6 sm:py-5">
+
+        <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/5" />
+
+        <div className="relative flex items-center justify-between gap-3">
+
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lg ring-1 ring-white/10 sm:h-12 sm:w-12 sm:text-xl">
+              ✦
+            </div>
+
+            <div className="min-w-0">
+
+              <div className="flex items-center gap-2">
+
+                <h2 className="!mb-0 !text-left !text-base !font-semibold !text-white sm:!text-lg">
+                  AI Task Assistant
+                </h2>
+
+                <span className="hidden rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-gray-300 sm:inline">
+                  AI
+                </span>
+
+              </div>
+
+              <p className="!mb-0 mt-1 truncate text-xs text-gray-400 sm:text-sm">
+                Your intelligent task management companion
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 sm:px-3">
+
+            <span className="h-2 w-2 rounded-full bg-green-400" />
+
+            <span className="hidden text-xs font-medium text-gray-300 sm:inline">
+              Online
+            </span>
+
+          </div>
+
+        </div>
+
+      </header>
+
+      {/* Messages */}
+
+      <main
+  className="flex-1 space-y-5 overflow-y-auto bg-gray-50 p-3 sm:space-y-6 sm:p-6"
+  aria-live="polite"
+  aria-busy={isLoading}
+>
+
         {messages.map((chatMessage) => (
           <div
             key={chatMessage.id}
@@ -165,16 +209,50 @@ function ChatPage({ onTasksChanged }: ChatPageProps) {
                 : "justify-start"
             }`}
           >
-            <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                chatMessage.role === "user"
-                  ? "bg-black text-white"
-                  : "bg-gray-100"
-              }`}
-            >
-              <p className="text-sm">
-                {chatMessage.content}
-              </p>
+
+            <div className="max-w-[90%] sm:max-w-[75%]">
+
+              {/* Sender */}
+
+              <div
+                className={`mb-1.5 flex items-center gap-2 text-xs font-medium text-gray-400 ${
+                  chatMessage.role === "user"
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+
+                {chatMessage.role === "assistant" && (
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-gray-900 text-[10px] text-white">
+                    ✦
+                  </span>
+                )}
+
+                <span>
+                  {chatMessage.role === "user"
+                    ? "You"
+                    : "AI Assistant"}
+                </span>
+
+              </div>
+
+              {/* Message */}
+
+              <div
+                className={`rounded-2xl px-3.5 py-2.5 shadow-sm sm:px-4 sm:py-3 ${
+                  chatMessage.role === "user"
+                    ? "rounded-br-md bg-gray-900 text-white"
+                    : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
+                }`}
+              >
+
+                <p className="!mb-0 whitespace-pre-wrap break-words text-sm leading-6">
+                  {chatMessage.content}
+                </p>
+
+              </div>
+
+              {/* Actions */}
 
               {chatMessage.actions?.map((action, index) => (
                 <ActionCard
@@ -182,42 +260,107 @@ function ChatPage({ onTasksChanged }: ChatPageProps) {
                   action={action}
                 />
               ))}
+
             </div>
+
           </div>
         ))}
 
+        {/* Loading */}
+
         {isLoading && (
           <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-lg bg-gray-100 p-3">
-              <p className="text-sm text-gray-500">
-                AI is thinking...
-              </p>
+
+            <div className="max-w-[90%] sm:max-w-[75%]">
+
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-medium text-gray-400">
+
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-gray-900 text-[10px] text-white">
+                  ✦
+                </span>
+
+                <span>
+                  AI Assistant
+                </span>
+
+              </div>
+
+              <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
+
+                <div
+                    className="flex items-center gap-3"
+                    role="status"
+                    aria-label="AI is thinking"
+                >
+
+                  <span className="text-sm text-gray-500">
+                    Thinking
+                  </span>
+
+                  <div className="flex gap-1">
+
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" />
+
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
+
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
+
+                  </div>
+
+                </div>
+
+              </div>
+
             </div>
+
           </div>
         )}
-      </div>
 
-      <div className="border-t p-4">
-        <div className="flex gap-2">
+      </main>
+
+      {/* Input */}
+
+      <footer className="shrink-0 border-t border-gray-200 bg-white px-3 py-3 sm:px-5 sm:py-4">
+
+        <div className="flex items-center gap-1.5 rounded-xl border border-gray-300 bg-gray-50 p-1.5 transition focus-within:border-gray-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-gray-200 sm:gap-2">
+
           <input
             type="text"
+            aria-label="Message AI Task Assistant"
             value={message}
-            onChange={(event) => setMessage(event.target.value)}
+            onChange={(event) =>
+              setMessage(event.target.value)
+            }
             onKeyDown={handleKeyDown}
             disabled={isLoading}
             placeholder="Ask me to manage your tasks..."
-            className="flex-1 rounded-lg border px-4 py-2 outline-none"
+            className="!mb-0 min-w-0 flex-1 border-0 bg-transparent px-2 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3"
           />
 
           <button
+            type="button"
+            aria-label={isLoading ? "Sending message" : "Send message"}
             onClick={handleSend}
-            disabled={isLoading}
-            className="rounded-lg bg-black px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isLoading || !message.trim()}
+            className="!m-0 shrink-0 rounded-lg bg-gray-900 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
           >
-            Send
+            <span className="hidden sm:inline">
+              {isLoading ? "Sending..." : "Send"}
+            </span>
+
+            <span className="sm:hidden">
+              ↑
+            </span>
           </button>
+
         </div>
-      </div>
+
+        <p className="!mb-0 mt-2 text-center text-[11px] text-gray-400">
+          Press Enter to send
+        </p>
+
+      </footer>
+
     </div>
   );
 }

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 .status-message {
   text-align: center;
   padding: 30px 0;
@@ -11,7 +13,7 @@
 
 .status-message.error button {
   margin-top: 10px;
-  background: #c0392b;
+  background: #2e2c2c;
 }
 
 .status-message.error button:hover {

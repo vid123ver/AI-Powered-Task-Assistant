@@ -61,21 +61,38 @@ function App() {
 
   return (
     <div className="container">
-      <nav className="flex gap-3 border-b pb-4 mb-6">
+
+      {/* Navigation */}
+
+      <nav className="mb-6 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 p-1.5">
+
         <button
+          type="button"
           onClick={() => setPage("tasks")}
-          className="rounded-lg border px-4 py-2"
+          className={`!m-0 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${
+            page === "tasks"
+              ? "!bg-gray-900 !text-white shadow-sm"
+              : "!bg-transparent !text-gray-600 hover:!bg-white hover:!text-gray-900"
+          }`}
         >
           Tasks
         </button>
 
         <button
+          type="button"
           onClick={() => setPage("chat")}
-          className="rounded-lg border px-4 py-2"
+          className={`!m-0 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${
+            page === "chat"
+              ? "!bg-gray-900 !text-white shadow-sm"
+              : "!bg-transparent !text-gray-600 hover:!bg-white hover:!text-gray-900"
+          }`}
         >
           AI Assistant
         </button>
+
       </nav>
+
+      {/* Tasks Page */}
 
       {page === "tasks" ? (
         <>
@@ -93,14 +110,24 @@ function App() {
           {error && (
             <div className="status-message error">
               <p>{error}</p>
-              <button onClick={fetchTasks}>Retry</button>
+
+              <button
+                type="button"
+                onClick={fetchTasks}
+              >
+                Retry
+              </button>
             </div>
           )}
 
           {renderTaskContent()}
         </>
       ) : (
-          <ChatPage onTasksChanged={fetchTasks} />
+        /* Chat Page */
+
+        <ChatPage
+          onTasksChanged={fetchTasks}
+        />
       )}
     </div>
   );
