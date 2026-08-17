@@ -7,19 +7,27 @@ export function registerUpdateTask(server: McpServer) {
     "update_task",
     {
       description:
-        "Use this tool when the user wants to modify an existing task. The task ID is required. Use the title field when the user wants to rename the task, the completed field when the user wants to change its completion status, and the priority field when the user wants to change its priority. Do not use this tool to create a new task.",
+        "Use this tool when the user wants to modify an existing task. The task ID is required. Use the title field when the user wants to rename the task, the completed field when the user wants to change its completion status, the priority field when the user wants to change its priority, and dueDate when the user wants to set or change the task due date. Do not use this tool to create a new task.",
       inputSchema: z.object({
         id: z.string().min(1),
         title: z.string().min(1).optional(),
         completed: z.boolean().optional(),
-        priority: z.enum(["low", "medium", "high"]).optional()
+        priority: z.enum(["low", "medium", "high"]).optional(),
+        dueDate: z.string().min(1).optional()
       })
     },
-    async ({ id, title, completed, priority }) => {
+    async ({
+      id,
+      title,
+      completed,
+      priority,
+      dueDate
+    }) => {
       const task = await taskApi.updateTask(id, {
         ...(title !== undefined && { title }),
         ...(completed !== undefined && { completed }),
-        ...(priority !== undefined && { priority })
+        ...(priority !== undefined && { priority }),
+        ...(dueDate !== undefined && { dueDate })
       });
 
       return {
@@ -31,7 +39,8 @@ export function registerUpdateTask(server: McpServer) {
                 id: task.id,
                 title: task.title,
                 completed: task.completed,
-                priority: task.priority
+                priority: task.priority,
+                dueDate: task.dueDate
               },
               null,
               2

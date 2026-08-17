@@ -42,6 +42,7 @@ export const taskApi = {
     title: string;
     completed?: boolean;
     priority?: "low" | "medium" | "high";
+    dueDate?: string;
   }) {
     const response = await apiRequest(
       `${API_BASE_URL}/tasks`,
@@ -53,7 +54,10 @@ export const taskApi = {
         body: JSON.stringify({
           title: data.title,
           completed: data.completed ?? false,
-          priority: data.priority ?? "medium"
+          priority: data.priority ?? "medium",
+          ...(data.dueDate !== undefined && {
+            dueDate: data.dueDate
+          })
         })
       }
     );
@@ -73,6 +77,7 @@ export const taskApi = {
       title?: string;
       completed?: boolean;
       priority?: "low" | "medium" | "high";
+      dueDate?: string;
     }
   ) {
     const response = await apiRequest(
