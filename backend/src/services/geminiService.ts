@@ -256,20 +256,23 @@ class GeminiService {
         actions,
       };
     } catch (error) {
-      console.error("Gemini API Error:", error);
+  console.error("Gemini API Error:", error);
 
-      if ((error as any).status === 429) {
-        throw new Error(
-          "Gemini API quota exceeded. Please wait a while or use another API key."
-        );
-      }
+  const status = (error as { status?: number }).status;
 
-      if (error instanceof Error) {
-        throw error;
-      }
+  if (status === 429) {
+    throw new AppError(
+      "Gemini API quota exceeded. Please wait a while or try again later.",
+      429
+    );
+  }
 
-      throw new Error("Unknown error occurred.");
-    }
+  if (error instanceof Error) {
+    throw error;
+  }
+
+  throw new Error("Unknown error occurred.");
+}
   }
 }
 
