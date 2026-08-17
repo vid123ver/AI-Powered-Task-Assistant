@@ -21,15 +21,17 @@ export const addTask = async (
 
 export const updateTask = async (
   id: string,
-  title: string,
-  completed: boolean,
-  dueDate?: string
+  updates: {
+    title?: string;
+    completed?: boolean;
+    priority?: "low" | "medium" | "high";
+    dueDate?: string;
+  }
 ): Promise<Task> => {
-  const response = await api.put(`/tasks/${id}`, {
-    title,
-    completed,
-    dueDate,
-  });
+  const response = await api.put(
+    `/tasks/${id}`,
+    updates
+  );
 
   return response.data;
 };

@@ -66,17 +66,20 @@ export const useTasks = () => {
 
   const editTask = async (
     task: Task,
-    newTitle: string
+    updates: {
+      title: string;
+      priority: "low" | "medium" | "high";
+      dueDate?: string;
+    }
   ) => {
     setError(null);
 
     try {
-      await taskApi.updateTask(
-        task.id,
-        newTitle,
-        task.completed,
-        task.dueDate
-      );
+      await taskApi.updateTask(task.id, {
+        title: updates.title,
+        priority: updates.priority,
+        dueDate: updates.dueDate,
+      });
 
       await fetchTasks();
     } catch (error) {

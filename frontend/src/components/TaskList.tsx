@@ -6,7 +6,14 @@ interface TaskListProps {
   tasks: Task[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (task: Task, newTitle: string) => void;
+  onEdit: (
+    task: Task,
+    updates: {
+      title: string;
+      priority: "low" | "medium" | "high";
+      dueDate?: string;
+    }
+  ) => void;
 }
 
 function TaskList({
@@ -21,7 +28,13 @@ function TaskList({
   const [editingId, setEditingId] =
     useState<string | null>(null);
 
-  const [editValue, setEditValue] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+
+  const [editPriority, setEditPriority] = useState<
+    "low" | "medium" | "high"
+  >("medium");
+
+  const [editDueDate, setEditDueDate] = useState("");
 
   const requestDelete = (id: string) => {
     setConfirmDeleteId(id);
@@ -41,12 +54,16 @@ function TaskList({
 
   const startEdit = (task: Task) => {
     setEditingId(task.id);
-    setEditValue(task.title);
+    setEditTitle(task.title);
+    setEditPriority(task.priority);
+    setEditDueDate(task.dueDate ?? "");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditValue("");
+    setEditTitle("");
+    setEditPriority("medium");
+    setEditDueDate("");
   };
 
   const saveEdit = (
@@ -55,16 +72,19 @@ function TaskList({
   ) => {
     event.preventDefault();
 
-    const trimmed = editValue.trim();
+    const trimmedTitle = editTitle.trim();
 
-    if (!trimmed) {
+    if (!trimmedTitle) {
       return;
     }
 
-    onEdit(task, trimmed);
+    onEdit(task, {
+      title: trimmedTitle,
+      priority: editPriority,
+      dueDate: editDueDate || undefined,
+    });
 
-    setEditingId(null);
-    setEditValue("");
+    cancelEdit();
   };
 
   const formatDueDate = (
@@ -124,6 +144,9 @@ function TaskList({
               const formattedDueDate =
                 formatDueDate(task.dueDate);
 
+              const isEditing =
+                editingId === task.id;
+
               return (
                 <tr
                   key={task.id}
@@ -145,25 +168,18 @@ function TaskList({
                   </td>
 
                   <td className="px-4 py-4">
-                    {editingId === task.id ? (
-                      <form
-                        className="flex gap-2"
-                        onSubmit={(event) =>
-                          saveEdit(task, event)
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(event) =>
+                          setEditTitle(
+                            event.target.value
+                          )
                         }
-                      >
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(event) =>
-                            setEditValue(
-                              event.target.value
-                            )
-                          }
-                          autoFocus
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
-                        />
-                      </form>
+                        autoFocus
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+                      />
                     ) : (
                       <span
                         className={
@@ -178,21 +194,60 @@ function TaskList({
                   </td>
 
                   <td className="px-4 py-4">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-                        task.priority === "high"
-                          ? "bg-red-50 text-red-700"
-                          : task.priority === "medium"
-                            ? "bg-yellow-50 text-yellow-700"
-                            : "bg-green-50 text-green-700"
-                      }`}
-                    >
-                      {task.priority}
-                    </span>
+                    {isEditing ? (
+                      <select
+                        value={editPriority}
+                        onChange={(event) =>
+                          setEditPriority(
+                            event.target.value as
+                              | "low"
+                              | "medium"
+                              | "high"
+                          )
+                        }
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+                      >
+                        <option value="low">
+                          Low
+                        </option>
+
+                        <option value="medium">
+                          Medium
+                        </option>
+
+                        <option value="high">
+                          High
+                        </option>
+                      </select>
+                    ) : (
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
+                          task.priority === "high"
+                            ? "bg-red-50 text-red-700"
+                            : task.priority ===
+                                "medium"
+                              ? "bg-yellow-50 text-yellow-700"
+                              : "bg-green-50 text-green-700"
+                        }`}
+                      >
+                        {task.priority}
+                      </span>
+                    )}
                   </td>
 
                   <td className="px-4 py-4">
-                    {formattedDueDate ? (
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={editDueDate}
+                        onChange={(event) =>
+                          setEditDueDate(
+                            event.target.value
+                          )
+                        }
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+                      />
+                    ) : formattedDueDate ? (
                       <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
                         {formattedDueDate}
                       </span>
@@ -218,11 +273,11 @@ function TaskList({
                   </td>
 
                   <td className="px-4 py-4">
-                    {editingId === task.id ? (
-                      <div className="flex gap-2">
+                    {isEditing ? (
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white transition hover:bg-gray-800"
+                          className="!bg-gray-900 !px-3 !py-2 !text-xs !font-medium !text-white hover:!bg-gray-800"
                           onClick={(event) =>
                             saveEdit(task, event)
                           }
@@ -232,17 +287,17 @@ function TaskList({
 
                         <button
                           type="button"
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
+                          className="!border !border-gray-300 !bg-white !px-3 !py-2 !text-xs !font-medium !text-gray-700 hover:!bg-gray-100"
                           onClick={cancelEdit}
                         >
                           Cancel
                         </button>
                       </div>
                     ) : (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100"
+                          className="!border !border-gray-300 !bg-white !px-3 !py-2 !text-xs !font-medium !text-gray-700 hover:!bg-gray-100"
                           onClick={() =>
                             startEdit(task)
                           }
@@ -252,7 +307,7 @@ function TaskList({
 
                         <button
                           type="button"
-                          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-700"
+                          className="!bg-red-600 !px-3 !py-2 !text-xs !font-medium !text-white hover:!bg-red-700"
                           onClick={() =>
                             requestDelete(task.id)
                           }
