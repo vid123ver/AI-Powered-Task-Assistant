@@ -97,6 +97,12 @@
   {
     "id": "cc675919-3ad4-423d-88cf-469d35ae1e6c",
     "title": "gym",
+    "completed": true,
+    "priority": "medium"
+  },
+  {
+    "id": "54ca5bca-82b2-4010-9c78-7576e7887f61",
+    "title": "swimming",
     "completed": false,
     "priority": "medium"
   }

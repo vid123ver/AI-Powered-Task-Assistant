@@ -100,7 +100,7 @@ function App() {
           {renderTaskContent()}
         </>
       ) : (
-        <ChatPage />
+          <ChatPage onTasksChanged={fetchTasks} />
       )}
     </div>
   );

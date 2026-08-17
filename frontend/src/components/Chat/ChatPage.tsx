@@ -5,8 +5,10 @@ import {
   sendChatMessage,
 } from "../../api/chatApi";
 import ActionCard from "./ActionCard";
-
-function ChatPage() {
+interface ChatPageProps {
+  onTasksChanged: () => Promise<void>;
+}
+function ChatPage({ onTasksChanged }: ChatPageProps) {
   const [message, setMessage] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +51,14 @@ function ChatPage() {
         sessionId,
         message: trimmedMessage,
       });
+      try {
+  await onTasksChanged();
+} catch (error) {
+  console.error(
+    "Failed to refresh tasks after chat action:",
+    error
+  );
+}
 
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
