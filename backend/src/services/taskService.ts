@@ -19,17 +19,23 @@ export const findById = async (id: string): Promise<Task> => {
   return task;
 };
 
-export const create = async (title: string, priority: "low" | "medium" | "high"): Promise<Task> => {
+export const create = async (
+  title: string,
+  priority: "low" | "medium" | "high",
+  dueDate?: string
+): Promise<Task> => {
   const tasks = await taskRepository.readTasks();
 
   const newTask: Task = {
     id: crypto.randomUUID(),
     title,
     completed: false,
-    priority: priority ?? "medium"
+    priority: priority ?? "medium",
+    dueDate,
   };
 
   tasks.push(newTask);
+
   await taskRepository.writeTasks(tasks);
 
   return newTask;
@@ -37,7 +43,12 @@ export const create = async (title: string, priority: "low" | "medium" | "high")
 
 export const update = async (
   id: string,
-  updates: { title?: string; completed?: boolean; priority?: "low" | "medium" | "high" }
+  updates: {
+    title?: string;
+    completed?: boolean;
+    priority?: "low" | "medium" | "high";
+    dueDate?: string;
+  }
 ): Promise<Task> => {
   const tasks = await taskRepository.readTasks();
 
@@ -58,6 +69,11 @@ export const update = async (
   if (updates.priority !== undefined) {
     task.priority = updates.priority;
   }
+
+  if (updates.dueDate !== undefined) {
+    task.dueDate = updates.dueDate;
+  }
+
   await taskRepository.writeTasks(tasks);
 
   return task;

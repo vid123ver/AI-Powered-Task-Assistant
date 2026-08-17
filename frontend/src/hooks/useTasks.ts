@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import type { Task } from "../types/Task";
 import * as taskApi from "../api/taskApi";
 
-const GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again.";
+const GENERIC_ERROR_MESSAGE =
+  "Something went wrong. Please try again.";
 
 export const useTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -14,25 +15,28 @@ export const useTasks = () => {
     setError(null);
 
     try {
-    const data = await taskApi.getTasks();
+      const data = await taskApi.getTasks();
 
-    console.log("Tasks API response:", data);
-    console.log("Is array:", Array.isArray(data));
+      console.log("Tasks API response:", data);
+      console.log("Is array:", Array.isArray(data));
 
-    setTasks(data);
-  } catch (error) {
-    setError(GENERIC_ERROR_MESSAGE);
-  } finally {
-    setIsLoading(false);
-  }
+      setTasks(data);
+    } catch (error) {
+      setError(GENERIC_ERROR_MESSAGE);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const addTask = async (title: string) => {
+  const addTask = async (
+    title: string,
+    dueDate?: string
+  ) => {
     setError(null);
 
     try {
-      await taskApi.addTask(title);
-      fetchTasks();
+      await taskApi.addTask(title, dueDate);
+      await fetchTasks();
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
     }
@@ -43,7 +47,7 @@ export const useTasks = () => {
 
     try {
       await taskApi.toggleTask(id);
-      fetchTasks();
+      await fetchTasks();
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
     }
@@ -54,18 +58,27 @@ export const useTasks = () => {
 
     try {
       await taskApi.deleteTask(id);
-      fetchTasks();
+      await fetchTasks();
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
     }
   };
 
-  const editTask = async (task: Task, newTitle: string) => {
+  const editTask = async (
+    task: Task,
+    newTitle: string
+  ) => {
     setError(null);
 
     try {
-      await taskApi.updateTask(task.id, newTitle, task.completed);
-      fetchTasks();
+      await taskApi.updateTask(
+        task.id,
+        newTitle,
+        task.completed,
+        task.dueDate
+      );
+
+      await fetchTasks();
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
     }

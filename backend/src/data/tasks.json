@@ -135,5 +135,12 @@
     "title": "learn skills",
     "completed": false,
     "priority": "medium"
+  },
+  {
+    "id": "52842b32-0608-462e-8867-355f6b14d98b",
+    "title": "repair laptop",
+    "completed": false,
+    "priority": "medium",
+    "dueDate": "2026-08-24"
   }
 ]

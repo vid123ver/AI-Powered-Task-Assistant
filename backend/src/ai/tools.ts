@@ -15,7 +15,7 @@ export const taskTools: FunctionDeclaration[] = [
   {
     name: "create_task",
     description:
-      "Use this tool whenever the user wants to create, add, save, insert, or make a new task. If the user asks to remember something as a task or create a reminder-like task, use this tool. The title should contain only the task description.",
+      "Use this tool whenever the user wants to create, add, save, insert, or make a new task. If the user asks to remember something as a task or create a reminder-like task, use this tool. The title should contain only the task description. If the user mentions a due date such as today, tomorrow, Friday, Monday, or a specific calendar date, include it in dueDate.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -24,22 +24,28 @@ export const taskTools: FunctionDeclaration[] = [
           description:
             "The title or description of the new task provided by the user.",
         },
+
         priority: {
           type: Type.STRING,
           enum: ["low", "medium", "high"],
           description:
-            "The priority of the task. Only set this if the user explicitly states a priority (e.g. 'high priority', 'low priority', 'urgent' = high). If the user does not mention a priority, omit this field entirely and let it default.",
+            "The priority of the task. Only set this if the user explicitly states a priority. If the user does not mention a priority, omit this field entirely and let it default.",
+        },
+
+        dueDate: {
+          type: Type.STRING,
+          description:
+            "The due date mentioned by the user. Preserve the user's date expression such as 'today', 'tomorrow', 'Friday', 'Monday', or a specific date such as '2026-08-25'. Only set this field when the user explicitly provides a due date.",
         },
       },
       required: ["title"],
     },
   },
- 
 
   {
     name: "update_task",
     description:
-      "Use this tool whenever the user wants to update, edit, rename, modify, change the title, mark a task as completed, mark it as incomplete, or change any existing task. Always use the task ID and update only the fields requested by the user.",
+      "Use this tool whenever the user wants to update, edit, rename, modify, change the title, change the due date, mark a task as completed, mark it as incomplete, or change any existing task. Always use the task ID and update only the fields requested by the user.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -47,26 +53,34 @@ export const taskTools: FunctionDeclaration[] = [
           type: Type.STRING,
           description: "The unique ID of the task to update.",
         },
+
         title: {
           type: Type.STRING,
           description: "The new title of the task.",
         },
+
         completed: {
           type: Type.BOOLEAN,
           description:
             "The completion status of the task. True means completed and false means pending.",
         },
+
         priority: {
           type: Type.STRING,
           enum: ["low", "medium", "high"],
           description:
             "The new priority of the task. Only set this if the user explicitly asks to change the task's priority.",
         },
+
+        dueDate: {
+          type: Type.STRING,
+          description:
+            "The new due date mentioned by the user. Preserve the user's date expression such as 'today', 'tomorrow', 'Friday', 'Monday', or a specific date such as '2026-08-25'. Only set this field when the user explicitly asks to change the due date.",
+        },
       },
       required: ["id"],
     },
   },
- 
 
   {
     name: "delete_task",

@@ -4,9 +4,21 @@ import { taskTools } from "../ai/tools";
 import * as taskService from "./taskService";
 import { systemInstruction } from "../ai/systemInstruction";
 import { AppError } from "../utils/AppError";
-import type { ChatAction } from "../types/chat";
+import { normalizeDueDate } from "../utils/dateUtils";
 
-interface GeminiChatResult {
+type ChatActionType =
+  | "create_task"
+  | "update_task"
+  | "delete_task"
+  | "list_tasks";
+
+interface ChatAction {
+  type: ChatActionType;
+  task?: unknown;
+  count?: number;
+}
+
+interface ChatResult {
   reply: string;
   actions: ChatAction[];
 }
@@ -17,13 +29,14 @@ class GeminiService {
   async sendMessage(
     sessionId: string,
     message: string
-  ): Promise<GeminiChatResult> {
+  ): Promise<ChatResult> {
     try {
       let chat = this.sessions.get(sessionId);
 
       if (!chat) {
         chat = geminiClient.chats.create({
-          model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+          model:
+            process.env.GEMINI_MODEL || "gemini-2.5-flash",
           config: {
             systemInstruction,
             tools: [
@@ -37,20 +50,19 @@ class GeminiService {
         this.sessions.set(sessionId, chat);
       }
 
-      const actions: ChatAction[] = [];
-
       let response = await chat.sendMessage({
         message,
       });
+
+      const actions: ChatAction[] = [];
 
       let loopCount = 0;
       const maxLoops = 10;
 
       while (response.functionCalls?.length) {
         if (loopCount >= maxLoops) {
-          throw new AppError(
-            "Maximum tool calling limit reached.",
-            500
+          throw new Error(
+            "Maximum tool calling limit reached."
           );
         }
 
@@ -83,19 +95,35 @@ class GeminiService {
               const args = call.args as {
                 title: string;
                 priority?: "low" | "medium" | "high";
+                dueDate?: string;
               };
+
+              let normalizedDueDate: string | undefined;
+
+              if (args.dueDate !== undefined) {
+                const parsedDueDate = normalizeDueDate(
+                  args.dueDate
+                );
+
+                if (!parsedDueDate) {
+                  throw new AppError(
+                    `Invalid due date: ${args.dueDate}`,
+                    400
+                  );
+                }
+
+                normalizedDueDate = parsedDueDate;
+              }
 
               const newTask = await taskService.create(
                 args.title,
-                args.priority ?? "medium"
+                args.priority ?? "medium",
+                normalizedDueDate
               );
 
               actions.push({
                 type: "create_task",
-                task: {
-                  id: newTask.id,
-                  title: newTask.title,
-                },
+                task: newTask,
               });
 
               functionResponses.push({
@@ -115,23 +143,43 @@ class GeminiService {
                 title?: string;
                 completed?: boolean;
                 priority?: "low" | "medium" | "high";
+                dueDate?: string;
               };
+
+              const updates: {
+                title?: string;
+                completed?: boolean;
+                priority?: "low" | "medium" | "high";
+                dueDate?: string;
+              } = {
+                title: args.title,
+                completed: args.completed,
+                priority: args.priority,
+              };
+
+              if (args.dueDate !== undefined) {
+                const parsedDueDate = normalizeDueDate(
+                  args.dueDate
+                );
+
+                if (!parsedDueDate) {
+                  throw new AppError(
+                    `Invalid due date: ${args.dueDate}`,
+                    400
+                  );
+                }
+
+                updates.dueDate = parsedDueDate;
+              }
 
               const updatedTask = await taskService.update(
                 args.id,
-                {
-                  title: args.title,
-                  completed: args.completed,
-                  priority: args.priority,
-                }
+                updates
               );
 
               actions.push({
                 type: "update_task",
-                task: {
-                  id: updatedTask.id,
-                  title: updatedTask.title,
-                },
+                task: updatedTask,
               });
 
               functionResponses.push({
@@ -150,16 +198,10 @@ class GeminiService {
                 id: string;
               };
 
-              const task = await taskService.findById(args.id);
-
               await taskService.remove(args.id);
 
               actions.push({
                 type: "delete_task",
-                task: {
-                  id: task.id,
-                  title: task.title,
-                },
               });
 
               functionResponses.push({
@@ -216,43 +258,17 @@ class GeminiService {
     } catch (error) {
       console.error("Gemini API Error:", error);
 
-      const status =
-        typeof error === "object" &&
-        error !== null &&
-        "status" in error &&
-        typeof error.status === "number"
-          ? error.status
-          : undefined;
-
-      if (status === 429) {
-        throw new AppError(
-          "Gemini API rate limit reached. Please try again later.",
-          429
+      if ((error as any).status === 429) {
+        throw new Error(
+          "Gemini API quota exceeded. Please wait a while or use another API key."
         );
-      }
-
-      if (status === 503) {
-        throw new AppError(
-          "The AI service is temporarily unavailable. Please try again shortly.",
-          503
-        );
-      }
-
-      if (error instanceof AppError) {
-        throw error;
       }
 
       if (error instanceof Error) {
-        throw new AppError(
-          "Something went wrong while communicating with the AI service.",
-          500
-        );
+        throw error;
       }
 
-      throw new AppError(
-        "Unknown error occurred while communicating with the AI service.",
-        500
-      );
+      throw new Error("Unknown error occurred.");
     }
   }
 }
