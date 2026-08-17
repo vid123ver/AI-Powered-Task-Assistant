@@ -17,9 +17,6 @@ export const useTasks = () => {
     try {
       const data = await taskApi.getTasks();
 
-      console.log("Tasks API response:", data);
-      console.log("Is array:", Array.isArray(data));
-
       setTasks(data);
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
@@ -35,8 +32,15 @@ export const useTasks = () => {
     setError(null);
 
     try {
-      await taskApi.addTask(title, dueDate);
-      await fetchTasks();
+      const newTask = await taskApi.addTask(
+        title,
+        dueDate
+      );
+
+      setTasks((previousTasks) => [
+        ...previousTasks,
+        newTask,
+      ]);
     } catch (error) {
       setError(GENERIC_ERROR_MESSAGE);
     }
@@ -45,10 +49,29 @@ export const useTasks = () => {
   const toggleTask = async (id: string) => {
     setError(null);
 
+    const previousTasks = tasks;
+
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === id
+          ? {
+              ...task,
+              completed: !task.completed,
+            }
+          : task
+      )
+    );
+
     try {
-      await taskApi.toggleTask(id);
-      await fetchTasks();
+      const updatedTask = await taskApi.toggleTask(id);
+
+      setTasks((currentTasks) =>
+        currentTasks.map((task) =>
+          task.id === id ? updatedTask : task
+        )
+      );
     } catch (error) {
+      setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }
   };
@@ -56,10 +79,16 @@ export const useTasks = () => {
   const deleteTask = async (id: string) => {
     setError(null);
 
+    const previousTasks = tasks;
+
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => task.id !== id)
+    );
+
     try {
       await taskApi.deleteTask(id);
-      await fetchTasks();
     } catch (error) {
+      setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }
   };
@@ -74,15 +103,40 @@ export const useTasks = () => {
   ) => {
     setError(null);
 
-    try {
-      await taskApi.updateTask(task.id, {
-        title: updates.title,
-        priority: updates.priority,
-        dueDate: updates.dueDate,
-      });
+    const previousTasks = tasks;
 
-      await fetchTasks();
+    setTasks((currentTasks) =>
+      currentTasks.map((currentTask) =>
+        currentTask.id === task.id
+          ? {
+              ...currentTask,
+              title: updates.title,
+              priority: updates.priority,
+              dueDate: updates.dueDate,
+            }
+          : currentTask
+      )
+    );
+
+    try {
+      const updatedTask = await taskApi.updateTask(
+        task.id,
+        {
+          title: updates.title,
+          priority: updates.priority,
+          dueDate: updates.dueDate,
+        }
+      );
+
+      setTasks((currentTasks) =>
+        currentTasks.map((currentTask) =>
+          currentTask.id === task.id
+            ? updatedTask
+            : currentTask
+        )
+      );
     } catch (error) {
+      setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }
   };
