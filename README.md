@@ -5,13 +5,12 @@ A Task Management app (React + Express + TypeScript, extended from Assignment 1)
 1. **`POST /chat`** — a backend endpoint where Google Gemini manages tasks via function calling, used by the in-app chat page.
 2. **A standalone MCP server** — the same task tools exposed over the Model Context Protocol, usable from any MCP client (tested with Claude Desktop).
 
-> **Status: Phases 1, 2, and 3 complete.** The frontend has a full AI Assistant chat page (in the nav) alongside the original task list. Both the in-app chat and Claude Desktop (via the MCP server) can manage tasks end-to-end.
+> **Status: Phases 1, 2, and 3 complete.** The frontend has a full AI Assistant chat page (in the nav) alongside the original task list. Both the in-app chat and Claude Desktop (via the MCP server) can manage tasks end-to-end, including optional due dates.
 
 ---
 
 ## Table of Contents
 
-- [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Setup](#setup)
 - [Environment Variables](#environment-variables)
@@ -24,61 +23,108 @@ A Task Management app (React + Express + TypeScript, extended from Assignment 1)
 
 ---
 
-## Architecture
-
-```
-Frontend (React)                 Backend (Express)                 Gemini API
-┌─────────────────┐              ┌───────────────────────┐         (function calling)
-│ Tasks tab        │── REST ────►│ /tasks → taskController│
-│ (list/add/edit)  │              │                        │
-│                  │              │ /chat  → chatController│
-│ AI Assistant tab │── REST ────►│         → geminiService ├───────► tool calls
-│ (chat UI)        │              │         → taskService  │              │
-└─────────────────┘              └───────────┬────────────┘              ▼
-                                              │                    taskService (same
-                                              ▼                    layer /tasks uses)
-                                        tasks.json (file store)
-
-MCP Server (stdio transport)      Claude Desktop
-┌────────────────────────┐        ┌──────────────────┐
-│ task-management-server │◄───────│ connects as an     │
-│ 6 registered tools      │        │ MCP client         │
-└───────────┬─────────────┘        └──────────────────┘
-            │ HTTP + Bearer token
-            ▼
-     Backend /tasks REST API
-```
-
-The `/chat` endpoint and the MCP server are two separate, parallel ways to let an AI use the same task tools:
-
-- **`/chat`** talks to Gemini directly and calls `taskService` in-process (no HTTP hop).
-- **The MCP server** talks to any MCP client and calls the backend's `/tasks` REST API over HTTP with a bearer token — this is how it stays decoupled from the AI provider entirely.
-
----
-
 ## Project Structure
 
 ```
 AI-Powered-Task-Assistant/
-├── backend/                 # Express + TS API — /tasks (CRUD) and /chat (Gemini)
+├── .gitignore
+├── .vscode/
+│   └── settings.json
+├── Assignment3_Phase-1.postman_collection.json
+├── README.md
+├── package.json
+│
+├── backend/
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── package.json
+│   ├── tsconfig.json
 │   └── src/
-│       ├── ai/               # Gemini tool declarations + system instruction
+│       ├── server.ts
+│       ├── app.ts
+│       ├── ai/
+│       │   ├── systemInstruction.ts     # Gemini system prompt / rules
+│       │   └── tools.ts                 # Gemini function declarations (4 tools)
+│       ├── config/
+│       │   └── gemini.ts                # Gemini client setup
 │       ├── controllers/
-│       ├── services/         # taskService, geminiService
-│       ├── repositories/     # tasks.json file store
-│       ├── middlewares/      # apiAuth, chatValidation, errorHandler
-│       └── routes/
-├── frontend/                 # React + TS — task list UI + AI Assistant chat page
+│       │   ├── chatController.ts        # POST /chat handler
+│       │   └── taskController.ts        # /tasks CRUD handlers
+│       ├── data/
+│       │   └── tasks.json               # file-based task store
+│       ├── middlewares/
+│       │   ├── apiAuth.ts               # bearer token auth
+│       │   ├── chatValidation.ts        # validates /chat request body
+│       │   ├── errorHandler.ts
+│       │   └── notFound.ts
+│       ├── models/
+│       │   └── Task.ts                  # Task type (id, title, completed, priority, dueDate)
+│       ├── repositories/
+│       │   └── taskRepository.ts        # reads/writes tasks.json
+│       ├── routes/
+│       │   ├── chatRoutes.ts
+│       │   └── taskRoutes.ts
+│       ├── services/
+│       │   ├── geminiService.ts         # tool-call loop, session management
+│       │   └── taskService.ts           # task CRUD logic
+│       ├── types/
+│       │   └── chat.ts                  # ChatAction / ChatActionType types
+│       └── utils/
+│           ├── AppError.ts
+│           ├── asyncHandler.ts
+│           ├── dateUtils.ts             # due-date parsing/validation (today/tomorrow/weekday/ISO)
+│           └── taskValidator.ts
+│
+├── frontend/
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── .oxlintrc.json
+│   ├── README.md
+│   ├── index.html
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tsconfig.app.json
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts
 │   └── src/
-│       ├── components/Chat/  # ChatPage, ActionCard
-│       ├── api/               # taskApi, chatApi
-│       └── hooks/useTasks.ts
-├── mcp-server/                # Standalone MCP server (stdio transport)
-│   └── src/
-│       ├── tools/             # 6 registered MCP tools (zod schemas)
-│       └── services/taskApi.ts # calls backend /tasks over HTTP
-├── WRITEUP.md                 # what I learned / what confused me / what I'd change
-└── Assignment3_Phase-1.postman_collection.json
+│       ├── main.tsx
+│       ├── App.tsx
+│       ├── index.css
+│       ├── api/
+│       │   ├── api.ts                   # axios instance (base URL + bearer token)
+│       │   ├── taskApi.ts
+│       │   └── chatApi.ts
+│       ├── components/
+│       │   ├── ConfirmDialog.tsx
+│       │   ├── SearchBar.tsx
+│       │   ├── TaskForm.tsx             # includes due date input
+│       │   ├── TaskItem.tsx             # displays due date
+│       │   ├── TaskList.tsx
+│       │   └── Chat/
+│       │       ├── ChatPage.tsx         # chat UI, message list, sessionStorage persistence
+│       │       └── ActionCard.tsx       # inline "Task created/updated/deleted" card
+│       ├── hooks/
+│       │   └── useTasks.ts
+│       └── types/
+│           ├── Task.ts                  # includes dueDate?: string
+│           └── Chat.ts
+│
+└── mcp-server/
+    ├── .env.example
+    ├── .gitignore
+    ├── package.json
+    ├── tsconfig.json
+    └── src/
+        ├── server.ts                    # registers all 6 tools, starts stdio transport
+        ├── services/
+        │   └── taskApi.ts               # HTTP client to backend /tasks (base URL + bearer token, both env-configurable)
+        └── tools/
+            ├── createTask.ts            # accepts optional dueDate
+            ├── listTasks.ts
+            ├── updateTask.ts            # accepts optional dueDate
+            ├── deleteTask.ts
+            ├── getTaskSummary.ts
+            └── searchTasks.ts
 ```
 
 ---
@@ -94,7 +140,7 @@ cp .env.example .env   # fill in GEMINI_API_KEY and TASK_API_TOKEN (see below)
 npm run dev
 ```
 
-Runs on `http://localhost:5000` by default (set by `PORT` in `.env.example`).
+Runs on `http://localhost:5001` by default (set by `PORT` in `.env.example`).
 
 ### 2. Frontend
 
@@ -110,7 +156,7 @@ npm run dev
 ```bash
 cd mcp-server
 npm install
-cp .env.example .env   # TASK_API_TOKEN — must match the backend's token
+cp .env.example .env   # TASK_API_TOKEN and TASK_API_BASE_URL — must match the backend
 npm run build
 ```
 
@@ -121,7 +167,7 @@ npm run build
 **backend/.env**
 ```
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-flash-latest
 PORT=5001
 TASK_API_TOKEN=some-shared-secret
 ```
@@ -134,10 +180,11 @@ VITE_TASK_API_TOKEN=some-shared-secret
 
 **mcp-server/.env**
 ```
-TASK_API_TOKEN=some-shared-secret   # must match the backend's TASK_API_TOKEN
+TASK_API_TOKEN=some-shared-secret          # must match the backend's TASK_API_TOKEN
+TASK_API_BASE_URL=http://localhost:5001    # must match the backend's PORT
 ```
 
-`TASK_API_TOKEN` is required by the backend's `/tasks` routes (bearer auth) — both the frontend and the MCP server authenticate with it. Without it set on the backend, every `/tasks` request returns `500 Server authentication token is not configured`. No `.env` file is committed — only `.env.example` templates are.
+`TASK_API_TOKEN` is required by the backend's `/tasks` routes (bearer auth) — both the frontend and the MCP server authenticate with it. Without it set on the backend, every `/tasks` request returns `500 Server authentication token is not configured`. `TASK_API_BASE_URL` tells the MCP server where the backend lives — it falls back to `http://localhost:5001` if unset, but should be set explicitly if the backend runs on a different port or host. No `.env` file is committed — only `.env.example` templates are.
 
 ---
 
@@ -149,34 +196,36 @@ All `/tasks` routes require `Authorization: Bearer <TASK_API_TOKEN>`.
 |--------|---------------|---------------------------|
 | GET    | `/tasks`      | List all tasks            |
 | GET    | `/tasks/:id`  | Get one task               |
-| POST   | `/tasks`      | Create a task (`title`, optional `priority`) |
-| PUT    | `/tasks/:id`  | Update a task              |
+| POST   | `/tasks`      | Create a task (`title` required, optional `priority`, optional `dueDate`) |
+| PUT    | `/tasks/:id`  | Update a task (`title`, `completed`, `priority`, `dueDate` — all optional, at least one required) |
 | PATCH  | `/tasks/:id`  | Toggle completion          |
 | DELETE | `/tasks/:id`  | Delete a task               |
+
+**`dueDate` format:** accepts an ISO date (`2026-08-25`), `"today"`, `"tomorrow"`, or a weekday name (`"Friday"` — resolves to the next upcoming occurrence of that weekday). Invalid values return `400 Invalid due date`. Parsing/validation lives in `backend/src/utils/dateUtils.ts` and is shared by the REST API, `/chat`, and the MCP server.
 
 ## POST /chat
 
 ```json
 // request
-{ "sessionId": "abc-123", "message": "create a high priority task to fix the login bug" }
+{ "sessionId": "abc-123", "message": "create a high priority task to fix the login bug, due Friday" }
 
 // response
 {
   "success": true,
-  "reply": "I've created the task \"fix the login bug\" with high priority.",
+  "reply": "I've created the task \"fix the login bug\" with high priority, due Friday.",
   "actions": [
-    { "type": "create_task", "task": { "id": "…", "title": "fix the login bug" } }
+    { "type": "create_task", "task": { "id": "…", "title": "fix the login bug", "priority": "high", "dueDate": "2026-08-21" } }
   ]
 }
 ```
 
-`sessionId` keeps a Gemini `Chat` session (with history) alive in memory per session, so follow-ups like "now mark it as done" work without resending prior turns. Sessions are in-memory only and reset on server restart.
+`sessionId` keeps a Gemini `Chat` session (with history) alive in memory per session, so follow-ups like "now mark it as done" or "push the due date to next Monday" work without resending prior turns. Sessions are in-memory only and reset on server restart.
 
 ---
 
 ## MCP Server
 
-Runs over **stdio transport**, built with `@modelcontextprotocol/sdk` and `zod` for input schemas. It doesn't talk to Gemini — it calls the backend's `/tasks` REST API with the bearer token from `TASK_API_TOKEN`.
+Runs over **stdio transport**, built with `@modelcontextprotocol/sdk` and `zod` for input schemas. It doesn't talk to Gemini — it calls the backend's `/tasks` REST API with the bearer token from `TASK_API_TOKEN`, at the base URL from `TASK_API_BASE_URL`.
 
 ### Connecting the MCP Server to Claude Desktop
 
@@ -189,24 +238,25 @@ Add to your Claude Desktop MCP config (see modelcontextprotocol.io for the exact
       "command": "node",
       "args": ["/absolute/path/to/mcp-server/dist/server.js"],
       "env": {
-        "TASK_API_TOKEN": "some-shared-secret"
+        "TASK_API_TOKEN": "some-shared-secret",
+        "TASK_API_BASE_URL": "http://localhost:5001"
       }
     }
   }
 }
 ```
 
-Make sure the backend is running first (and its port matches what `taskApi.ts` expects — see the port note above), then restart Claude Desktop.
+Make sure the backend is running first, then restart Claude Desktop.
 
 ---
 
 ## Tools Exposed
 
-**Via `/chat` (Gemini function calling, 4 tools):** `list_tasks`, `create_task`, `update_task`, `delete_task`
+**Via `/chat` (Gemini function calling, 4 tools):** `list_tasks`, `create_task`, `update_task`, `delete_task` — `create_task` and `update_task` both accept an optional `dueDate`.
 
-**Via MCP server (6 tools):** `list_tasks`, `create_task`, `update_task`, `delete_task`, `get_task_summary`, `search_tasks`
+**Via MCP server (6 tools):** `list_tasks`, `create_task`, `update_task`, `delete_task`, `get_task_summary`, `search_tasks` — `create_task` and `update_task` both accept an optional `dueDate`.
 
-Each tool returns structured data (e.g. `create_task` returns the created task's `id`, `title`, `completed`, `priority` — not just a success flag).
+Each tool returns structured data (e.g. `create_task` returns the created task's `id`, `title`, `completed`, `priority`, and `dueDate` — not just a success flag).
 
 ---
 
@@ -214,9 +264,10 @@ Each tool returns structured data (e.g. `create_task` returns the created task's
 
 Tried against both the `/chat` UI and Claude Desktop (via MCP):
 
-- `"create a high priority task to fix the login bug"`
+- `"create a high priority task to fix the login bug, due Friday"`
 - `"show me all my tasks"`
 - `"mark the login bug task as done"`
+- `"change the due date on that task to tomorrow"`
 - `"delete all completed tasks"` *(multi-step: lists tasks first, then deletes the completed ones)*
 - `"search for tasks about login"`
 - `"give me a summary of my tasks"` *(MCP only — via `get_task_summary`)*
