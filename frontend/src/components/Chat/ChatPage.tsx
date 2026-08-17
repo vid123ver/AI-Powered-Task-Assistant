@@ -1,28 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChatMessage } from "../../types/Chat";
 import {
   ChatApiError,
   sendChatMessage,
 } from "../../api/chatApi";
 import ActionCard from "./ActionCard";
+
 interface ChatPageProps {
   onTasksChanged: () => Promise<void>;
 }
+
 function ChatPage({ onTasksChanged }: ChatPageProps) {
   const [message, setMessage] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId] = useState(() => {
+    const storedSessionId =
+      sessionStorage.getItem("chatSessionId");
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Hello! I can help you create, update, list, and delete tasks.",
-    },
-  ]);
+    if (storedSessionId) {
+      return storedSessionId;
+    }
+
+    const newSessionId = crypto.randomUUID();
+
+    sessionStorage.setItem(
+      "chatSessionId",
+      newSessionId
+    );
+
+    return newSessionId;
+  });
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const storedMessages =
+      sessionStorage.getItem("chatMessages");
+
+    if (storedMessages) {
+      try {
+        return JSON.parse(storedMessages);
+      } catch {
+        sessionStorage.removeItem("chatMessages");
+      }
+    }
+
+    return [
+      {
+        id: "welcome",
+        role: "assistant",
+        content:
+          "Hello! I can help you create, update, list, and delete tasks.",
+      },
+    ];
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "chatMessages",
+      JSON.stringify(messages)
+    );
+  }, [messages]);
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
@@ -51,14 +89,15 @@ function ChatPage({ onTasksChanged }: ChatPageProps) {
         sessionId,
         message: trimmedMessage,
       });
+
       try {
-  await onTasksChanged();
-} catch (error) {
-  console.error(
-    "Failed to refresh tasks after chat action:",
-    error
-  );
-}
+        await onTasksChanged();
+      } catch (error) {
+        console.error(
+          "Failed to refresh tasks after chat action:",
+          error
+        );
+      }
 
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
