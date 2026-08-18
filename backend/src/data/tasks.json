@@ -7,12 +7,12 @@
   {
     "id": "3383646f-9309-4d94-8a0a-c88ce866fe85",
     "title": "Learn Docker",
-    "completed": false
+    "completed": true
   },
   {
     "id": "c5488946-d484-4049-9f8f-c4a0f289658b",
     "title": "Learn Docker",
-    "completed": false
+    "completed": true
   },
   {
     "id": "b21f3b1a-d2b4-460a-b33b-60248fedb5c8",
@@ -142,5 +142,11 @@
     "completed": false,
     "priority": "medium",
     "dueDate": "2026-08-24"
+  },
+  {
+    "id": "a162a589-8a1e-445e-978f-a5ac51005747",
+    "title": "Collage class",
+    "completed": false,
+    "priority": "medium"
   }
 ]
