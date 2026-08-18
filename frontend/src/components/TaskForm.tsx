@@ -43,10 +43,14 @@ function TaskForm({ onAddTask }: TaskFormProps) {
       setTitle("");
       setDueDate("");
       setPriority("medium");
-    } catch {
-      setError(
-        "Unable to create the task. Please try again."
-      );
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(
+          "Unable to create the task. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -143,8 +147,15 @@ function TaskForm({ onAddTask }: TaskFormProps) {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-          {error}
+        <div
+          role="alert"
+          className="mt-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+        >
+          <span className="font-semibold">!</span>
+
+          <p className="m-0">
+            {error}
+          </p>
         </div>
       )}
 

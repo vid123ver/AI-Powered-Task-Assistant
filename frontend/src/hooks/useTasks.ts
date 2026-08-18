@@ -18,7 +18,7 @@ export const useTasks = () => {
       const data = await taskApi.getTasks();
 
       setTasks(data);
-    } catch (error) {
+    } catch {
       setError(GENERIC_ERROR_MESSAGE);
     } finally {
       setIsLoading(false);
@@ -29,8 +29,6 @@ export const useTasks = () => {
     title: string,
     dueDate?: string
   ) => {
-    setError(null);
-
     try {
       const newTask = await taskApi.addTask(
         title,
@@ -42,7 +40,7 @@ export const useTasks = () => {
         newTask,
       ]);
     } catch (error) {
-      setError(GENERIC_ERROR_MESSAGE);
+      throw error;
     }
   };
 
@@ -70,7 +68,7 @@ export const useTasks = () => {
           task.id === id ? updatedTask : task
         )
       );
-    } catch (error) {
+    } catch {
       setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }
@@ -87,7 +85,7 @@ export const useTasks = () => {
 
     try {
       await taskApi.deleteTask(id);
-    } catch (error) {
+    } catch {
       setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }
@@ -135,7 +133,7 @@ export const useTasks = () => {
             : currentTask
         )
       );
-    } catch (error) {
+    } catch {
       setTasks(previousTasks);
       setError(GENERIC_ERROR_MESSAGE);
     }

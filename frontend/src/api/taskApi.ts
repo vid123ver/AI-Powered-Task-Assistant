@@ -11,12 +11,26 @@ export const addTask = async (
   title: string,
   dueDate?: string
 ): Promise<Task> => {
-  const response = await api.post("/tasks", {
-    title,
-    dueDate,
-  });
+  try {
+    const response = await api.post("/tasks", {
+      title,
+      dueDate,
+    });
 
-  return response.data;
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 409) {
+      const message =
+        error.response?.data?.message ||
+        "A task with this title already exists.";
+
+      throw new Error(message);
+    }
+
+    throw new Error(
+      "Unable to create the task. Please try again."
+    );
+  }
 };
 
 export const updateTask = async (
