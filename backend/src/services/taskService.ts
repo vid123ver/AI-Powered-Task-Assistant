@@ -3,6 +3,10 @@ import { Task } from "../models/Task";
 import { AppError } from "../utils/AppError";
 import * as taskRepository from "../repositories/taskRepository";
 
+const normalizeTitle = (title: string): string => {
+  return title.trim().replace(/\s+/g, " ").toLowerCase();
+};
+
 export const findAll = async (): Promise<Task[]> => {
   return taskRepository.readTasks();
 };
@@ -26,9 +30,22 @@ export const create = async (
 ): Promise<Task> => {
   const tasks = await taskRepository.readTasks();
 
+  const normalizedTitle = normalizeTitle(title);
+
+  const duplicateTask = tasks.find(
+    (task) => normalizeTitle(task.title) === normalizedTitle
+  );
+
+  if (duplicateTask) {
+    throw new AppError(
+      `A task with the title "${duplicateTask.title}" already exists.`,
+      409
+    );
+  }
+
   const newTask: Task = {
     id: crypto.randomUUID(),
-    title,
+    title: title.trim(),
     completed: false,
     priority: priority ?? "medium",
     dueDate,
@@ -59,7 +76,25 @@ export const update = async (
   }
 
   if (updates.title !== undefined) {
-    task.title = updates.title;
+    const normalizedTitle = normalizeTitle(
+      updates.title
+    );
+
+    const duplicateTask = tasks.find(
+      (existingTask) =>
+        existingTask.id !== id &&
+        normalizeTitle(existingTask.title) ===
+          normalizedTitle
+    );
+
+    if (duplicateTask) {
+      throw new AppError(
+        `A task with the title "${duplicateTask.title}" already exists.`,
+        409
+      );
+    }
+
+    task.title = updates.title.trim();
   }
 
   if (updates.completed !== undefined) {
